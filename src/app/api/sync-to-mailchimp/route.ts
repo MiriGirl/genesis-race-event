@@ -16,8 +16,8 @@ type Participant = {
 
 // Define the shape of the webhook payload
 type WebhookBody = {
-  type: string; // e.g. "INSERT"
-  table: string; // e.g. "participants"
+  type: string;
+  table: string;
   record: Participant;
 };
 
@@ -65,11 +65,11 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ ok: true, data });
-  } catch (err) {
-    console.error("💥 Function error:", err);
-    if (err instanceof Error) {
-      return NextResponse.json({ error: err.message }, { status: 500 });
-    }
-    return NextResponse.json({ error: "Unknown error" }, { status: 500 });
+  }  catch (err) {
+  console.error("💥 Function error:", err);
+  if (err instanceof Error) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
+  return NextResponse.json({ error: "Unknown error" }, { status: 500 });
+}
 }
