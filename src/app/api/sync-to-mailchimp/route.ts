@@ -31,7 +31,7 @@ export async function POST(req: Request) {
     // Build merge fields
     const [firstName, ...rest] = (participant.name || "").split(" ");
     const lastName = rest.join(" ");
-    const flink = `https://meuraki.com/registration/${participant.race_no}`;
+    const flink = `https://innerdrive-race-event.vercel.app/${participant.race_no}`;
 
     const res = await fetch(
       `https://${MAILCHIMP_SERVER_PREFIX}.api.mailchimp.com/3.0/lists/${MAILCHIMP_LIST_ID}/members`,
