@@ -4,9 +4,26 @@ const MAILCHIMP_API_KEY = process.env.MAILCHIMP_API_KEY!;
 const MAILCHIMP_SERVER_PREFIX = process.env.MAILCHIMP_SERVER_PREFIX!; // e.g. "us14"
 const MAILCHIMP_LIST_ID = process.env.MAILCHIMP_LIST_ID!;
 
+// Define the shape of a participant record
+type Participant = {
+  email: string;
+  name: string;
+  phone: string;
+  race_no: string;
+  age_group: string;
+  nationality: string;
+};
+
+// Define the shape of the webhook payload
+type WebhookBody = {
+  type: string; // e.g. "INSERT"
+  table: string; // e.g. "participants"
+  record: Participant;
+};
+
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
+    const body: WebhookBody = await req.json();
     console.log("📩 Incoming webhook:", body);
 
     const participant = body.record;
@@ -48,8 +65,11 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ ok: true, data });
-  } catch (err: any) {
+  } catch (err) {
     console.error("💥 Function error:", err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    if (err instanceof Error) {
+      return NextResponse.json({ error: err.message }, { status: 500 });
+    }
+    return NextResponse.json({ error: "Unknown error" }, { status: 500 });
   }
 }
