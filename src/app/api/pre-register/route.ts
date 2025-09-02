@@ -17,9 +17,9 @@ const allowedOrigins = [
 function getCorsHeaders(origin: string | null) {
   const isAllowed = origin && allowedOrigins.includes(origin);
   return {
-    "Access-Control-Allow-Origin": isAllowed ? origin : allowedOrigins[0], // fallback
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, x-innerdrive-secret",
+   "Access-Control-Allow-Origin": "https://www.meuraki.com",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, x-innerdrive-secret",
   };
 }
 
