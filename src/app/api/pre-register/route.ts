@@ -6,21 +6,37 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "https://www.meuraki.com", // 🔒 restrict to your WP domain
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, x-innerdrive-secret",
-};
+// --- Allowed origins ---
+const allowedOrigins = [
+  "https://www.meuraki.com",
+  "http://localhost:3000",   // dev
+  "https://innerdrive.sg",   // your prod domain
+];
 
-// --- Handle preflight ---
-export async function OPTIONS() {
-  return new NextResponse(null, { status: 200, headers: corsHeaders });
+// --- Helper: CORS headers ---
+function getCorsHeaders(origin: string | null) {
+  const isAllowed = origin && allowedOrigins.includes(origin);
+  return {
+    "Access-Control-Allow-Origin": isAllowed ? origin : allowedOrigins[0], // fallback
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, x-innerdrive-secret",
+  };
 }
 
+// --- Handle preflight ---
+export async function OPTIONS(req: Request) {
+  const origin = req.headers.get("origin");
+  return new NextResponse(null, { status: 200, headers: getCorsHeaders(origin) });
+}
+
+// --- Handle POST ---
 export async function POST(req: Request) {
+  const origin = req.headers.get("origin");
+  const headers = getCorsHeaders(origin);
+
   const secret = req.headers.get("x-innerdrive-secret");
   if (secret !== process.env.PRE_REGISTER_SECRET) {
-    return NextResponse.json({ error: "unauthorized" }, { status: 401, headers: corsHeaders });
+    return NextResponse.json({ error: "unauthorized" }, { status: 401, headers });
   }
 
   const body = await req.json();
@@ -29,6 +45,7 @@ export async function POST(req: Request) {
   const email_norm = email.trim().toLowerCase();
   const phone_norm = phone.replace(/\s+/g, "");
 
+  // Check dedupe
   const { data: existing } = await supabase
     .from("participants")
     .select("id, race_no")
@@ -36,14 +53,13 @@ export async function POST(req: Request) {
     .maybeSingle();
 
   if (existing) {
-    return NextResponse.json({
-      ok: true,
-      deduped: true,
-      id: existing.id,
-      race_no: existing.race_no
-    }, { headers: corsHeaders });
+    return NextResponse.json(
+      { ok: true, deduped: true, id: existing.id, race_no: existing.race_no },
+      { headers }
+    );
   }
 
+  // Insert new participant
   const { data, error } = await supabase
     .from("participants")
     .insert([
@@ -58,19 +74,15 @@ export async function POST(req: Request) {
         line_type,
         pre_registered: true,
         source_system,
-        source_id
-      }
+        source_id,
+      },
     ])
     .select("id, race_no")
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500, headers: corsHeaders });
+    return NextResponse.json({ error: error.message }, { status: 500, headers });
   }
 
-  return NextResponse.json({
-    ok: true,
-    id: data.id,
-    race_no: data.race_no
-  }, { headers: corsHeaders });
+  return NextResponse.json({ ok: true, id: data.id, race_no: data.race_no }, { headers });
 }
