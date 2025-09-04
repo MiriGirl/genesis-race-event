@@ -25,3 +25,4 @@ export default async function RacePage({ params }: { params: { fno: string } }) 
   }
 
   return <RacePageClient fno={data.race_no} />;
+}
