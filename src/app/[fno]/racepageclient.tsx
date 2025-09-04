@@ -38,7 +38,7 @@ export default function RacePageClient({ fno }: { fno: string }) {
       {/* Constrained container with background */}
       <div
         className="relative w-full max-w-md min-h-screen bg-cover bg-center flex flex-col items-center text-white max-w-[400px]"
-        style={{ backgroundImage: "url(/bg/race-bg.jpg)" }}
+        style={{ backgroundImage: "url(/bg/race-bg2.jpg)" }}
       >
         {/* Overlay (optional for readability) */}
         <div className="absolute inset-0 bg-black/20" />
@@ -128,7 +128,7 @@ style={{
   />
 
   {/* Text Content */}
-  <div className="relative z-10 flex flex-col items-center gap-1 "  style={{ marginTop: "35px" }}>
+  <div className="relative z-10 flex flex-col items-center gap-1 "  style={{ marginTop: "90px" }}>
     {/* Upper Label */}
     <p
       className="uppercase"
