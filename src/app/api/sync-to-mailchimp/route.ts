@@ -20,6 +20,7 @@ type WebhookBody = {
   type: string;
   table: string;
   record: Participant;
+  old_record?: Participant;
 };
 
 // Helper → MD5 hash of lowercase email
@@ -30,19 +31,20 @@ function getSubscriberHash(email: string) {
 export async function POST(req: Request) {
   try {
     const body: WebhookBody = await req.json();
-    console.log("📩 Incoming webhook:", body);
+    console.log("📩 Incoming webhook:", JSON.stringify(body, null, 2));
 
-    const participant = body.record;
+    const participant = body.record || body.old_record;
+    if (!participant?.email) {
+      console.error("❌ Missing participant email in webhook body");
+      return NextResponse.json({ error: "Missing participant email" }, { status: 400 });
+    }
 
-    // Build merge fields
     const [firstName, ...rest] = (participant.name || "").split(" ");
     const lastName = rest.join(" ");
     const flink = `https://innerdrive.sg/${participant.race_no}`;
-
-    // Subscriber hash for Mailchimp
     const subscriberHash = getSubscriberHash(participant.email);
 
-    // Use PUT → upsert (create or update)
+    // STEP 1 → Upsert subscriber
     const res = await fetch(
       `https://${MAILCHIMP_SERVER_PREFIX}.api.mailchimp.com/3.0/lists/${MAILCHIMP_LIST_ID}/members/${subscriberHash}`,
       {
@@ -53,7 +55,7 @@ export async function POST(req: Request) {
         },
         body: JSON.stringify({
           email_address: participant.email,
-          status_if_new: "subscribed", // ✅ only used if creating new
+          status_if_new: "subscribed",
           merge_fields: {
             FNAME: firstName,
             LNAME: lastName,
@@ -63,23 +65,47 @@ export async function POST(req: Request) {
             AGE: participant.age_group,
             COUNTRY: participant.nationality,
           },
-          tags: ["innerdrive-registered"], // ⚠️ replaces tags if already exists
         }),
       }
     );
 
     const data = await res.json();
     if (!res.ok) {
-      console.error("❌ Mailchimp error:", data);
-      return NextResponse.json({ error: data }, { status: 400 });
+      console.error("❌ Mailchimp error (upsert):", data);
+      return NextResponse.json({ error: data.detail || data }, { status: 400 });
     }
 
-    return NextResponse.json({ ok: true, data });
+    console.log("✅ Mailchimp upsert success:", data.id);
+
+    // STEP 2 → Add tag (without replacing existing tags)
+    const tagRes = await fetch(
+      `https://${MAILCHIMP_SERVER_PREFIX}.api.mailchimp.com/3.0/lists/${MAILCHIMP_LIST_ID}/members/${subscriberHash}/tags`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `apikey ${MAILCHIMP_API_KEY}`,
+        },
+        body: JSON.stringify({
+          tags: [{ name: "innerdrive-registered", status: "active" }],
+        }),
+      }
+    );
+
+    const tagData = await tagRes.json();
+    if (!tagRes.ok) {
+      console.error("❌ Mailchimp error (tag):", tagData);
+      return NextResponse.json({ error: tagData.detail || tagData }, { status: 400 });
+    }
+
+    console.log("🏷️ Tag added successfully:", tagData);
+
+    return NextResponse.json({ ok: true, data, tagData });
   } catch (err) {
     console.error("💥 Function error:", err);
-    if (err instanceof Error) {
-      return NextResponse.json({ error: err.message }, { status: 500 });
-    }
-    return NextResponse.json({ error: "Unknown error" }, { status: 500 });
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Unknown error" },
+      { status: 500 }
+    );
   }
 }
