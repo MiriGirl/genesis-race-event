@@ -1,6 +1,9 @@
 // /src/app/api/pre-register/route.ts
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+// Force Node runtime (so supabase-js works) and disable static caching
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -14,6 +17,7 @@ const allowedOrigins = [
   "https://www.meuraki.com",
   "http://localhost:3000",   // dev
   "https://innerdrive.sg",   // prod
+  "https://www.innerdrive.sg", // add this if missing
 ];
 
 function getCorsHeaders(origin: string | null) {
