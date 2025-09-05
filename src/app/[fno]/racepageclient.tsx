@@ -30,7 +30,6 @@ export default function RacePageClient({ fno }: { fno: string }) {
 
   checkRace();
 }, [fno, router]);
-
   useEffect(() => {
     const interval = setInterval(() => {
       const now = new Date();
