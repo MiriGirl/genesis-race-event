@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import crypto from "crypto";
 
 const MAILCHIMP_API_KEY = process.env.MAILCHIMP_API_KEY!;
 const MAILCHIMP_SERVER_PREFIX = process.env.MAILCHIMP_SERVER_PREFIX!; // e.g. "us14"
@@ -21,6 +22,11 @@ type WebhookBody = {
   record: Participant;
 };
 
+// Helper → MD5 hash of lowercase email
+function getSubscriberHash(email: string) {
+  return crypto.createHash("md5").update(email.toLowerCase()).digest("hex");
+}
+
 export async function POST(req: Request) {
   try {
     const body: WebhookBody = await req.json();
@@ -33,17 +39,21 @@ export async function POST(req: Request) {
     const lastName = rest.join(" ");
     const flink = `https://innerdrive.sg/${participant.race_no}`;
 
+    // Subscriber hash for Mailchimp
+    const subscriberHash = getSubscriberHash(participant.email);
+
+    // Use PUT → upsert (create or update)
     const res = await fetch(
-      `https://${MAILCHIMP_SERVER_PREFIX}.api.mailchimp.com/3.0/lists/${MAILCHIMP_LIST_ID}/members`,
+      `https://${MAILCHIMP_SERVER_PREFIX}.api.mailchimp.com/3.0/lists/${MAILCHIMP_LIST_ID}/members/${subscriberHash}`,
       {
-        method: "POST",
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
           Authorization: `apikey ${MAILCHIMP_API_KEY}`,
         },
         body: JSON.stringify({
           email_address: participant.email,
-          status: "subscribed",
+          status_if_new: "subscribed", // ✅ only used if creating new
           merge_fields: {
             FNAME: firstName,
             LNAME: lastName,
@@ -53,7 +63,7 @@ export async function POST(req: Request) {
             AGE: participant.age_group,
             COUNTRY: participant.nationality,
           },
-          tags: ["innerdrive-registered"],
+          tags: ["innerdrive-registered"], // ⚠️ replaces tags if already exists
         }),
       }
     );
@@ -65,11 +75,11 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ ok: true, data });
-  }  catch (err) {
-  console.error("💥 Function error:", err);
-  if (err instanceof Error) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err) {
+    console.error("💥 Function error:", err);
+    if (err instanceof Error) {
+      return NextResponse.json({ error: err.message }, { status: 500 });
+    }
+    return NextResponse.json({ error: "Unknown error" }, { status: 500 });
   }
-  return NextResponse.json({ error: "Unknown error" }, { status: 500 });
-}
 }
