@@ -57,6 +57,19 @@ async function readPayload(req: Request) {
 const normEmail = (email?: string) => (email || "").trim().toLowerCase();
 const normPhone = (phone?: string) => (phone || "").replace(/\s+/g, "");
 
+// Helper: check duplicate by email only
+async function findExistingByEmail(email_norm: string) {
+  const { data, error } = await supabase
+    .from("participants")
+    .select("id, race_no")
+    .eq("email_norm", email_norm)
+    .order("id", { ascending: false })
+    .limit(1);
+
+  if (error) throw error;
+  return data && data.length > 0 ? data[0] : null;
+}
+
 // ─────────────────────────────────────────────────────────
 // POST
 // ─────────────────────────────────────────────────────────
@@ -94,17 +107,8 @@ export async function POST(req: Request) {
     const email_norm = normEmail(email);
     const phone_norm = normPhone(phone);
 
-    // Duplicate check (email OR phone)
-    const { data: existing, error: existingErr } = await supabase
-      .from("participants")
-      .select("id, race_no")
-      .or(`email_norm.eq.${email_norm},phone_norm.eq.${phone_norm}`)
-      .maybeSingle();
-
-    if (existingErr) {
-      return NextResponse.json({ error: existingErr.message }, { status: 500, headers });
-    }
-
+    // Duplicate check (EMAIL ONLY)
+    const existing = await findExistingByEmail(email_norm);
     if (existing) {
       return NextResponse.json(
         { ok: true, deduped: true, id: existing.id, race_no: existing.race_no },
@@ -136,12 +140,7 @@ export async function POST(req: Request) {
     if (error) {
       // Handle race: unique constraint duplicate
       if ((error as any).code === "23505") {
-        const { data: again } = await supabase
-          .from("participants")
-          .select("id, race_no")
-          .or(`email_norm.eq.${email_norm},phone_norm.eq.${phone_norm}`)
-          .maybeSingle();
-
+        const again = await findExistingByEmail(email_norm);
         return NextResponse.json(
           { ok: true, deduped: true, id: again?.id, race_no: again?.race_no },
           { status: 200, headers }
