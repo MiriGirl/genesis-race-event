@@ -6,28 +6,30 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-// --- Allowed origins ---
-const allowedOrigins = [
-  "https://www.meuraki.com",
-  "http://localhost:3000",   // dev
-  "https://innerdrive.sg",   // your prod domain
-];
-
 // --- Helper: CORS headers ---
 function getCorsHeaders(origin: string | null) {
+  const allowedOrigins = [
+    "https://www.meuraki.com",
+    "http://localhost:3000",   // dev
+    "https://innerdrive.sg",   // prod
+  ];
+
   const isAllowed = origin && allowedOrigins.includes(origin);
   return {
-   "Access-Control-Allow-Origin": "https://www.meuraki.com",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, x-innerdrive-secret",
+    "Access-Control-Allow-Origin": isAllowed ? origin! : "https://www.meuraki.com",
+    "Vary": "Origin", // prevent caching issues
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, x-innerdrive-secret",
+    "Access-Control-Max-Age": "86400",
   };
 }
 
 // --- Handle preflight ---
 export async function OPTIONS(req: Request) {
   const origin = req.headers.get("origin");
-  return new NextResponse(null, { status: 200, headers: getCorsHeaders(origin) });
+  return new NextResponse(null, { status: 204, headers: getCorsHeaders(origin) });
 }
+
 
 // --- Handle POST ---
 export async function POST(req: Request) {
