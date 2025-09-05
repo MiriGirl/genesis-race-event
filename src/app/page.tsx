@@ -94,7 +94,7 @@ export default function RacePageClient() {
 
                 {/* Race Number Input Box */}
                 <div
-  className="flex items-center justify-between px-6 w-[90%] max-w-[320px] relative "
+  className="flex items-center justify-between px-6 w-[90%] max-w-[380px] relative "
   style={{
     backgroundColor: "rgba(57, 57, 57, 0.5)",
     backdropFilter: "blur(1px)",
@@ -131,7 +131,7 @@ export default function RacePageClient() {
                     onChange={(e) =>
                       setFnoInput(e.target.value.replace(/[^0-9]/g, ""))
                     }
-                    className="flex-1 bg-transparent text-[#FF00FF] font-dragracing max-w-[180px]"
+                    className="flex-1 bg-transparent text-[#FF00FF] font-dragracing max-w-[200px]"
                     style={{
                       fontSize: "48px",
                       fontWeight: 400,
@@ -162,8 +162,8 @@ export default function RacePageClient() {
     style={{
       border: "none",
       background: "transparent",
-      padding: 0,
-      marginLeft: "10px",
+      padding: 10,
+      marginLeft: "2px",
       cursor: "pointer",
     }}
   >
