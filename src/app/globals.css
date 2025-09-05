@@ -29,3 +29,45 @@ body {
 .font-dragracing {
   font-family: "DragRacing", sans-serif;
 }
+
+/* Animated gradient border */
+/* Animated border line going around the box */
+.animated-border {
+  position: relative;
+  border-radius: 2px;
+}
+
+.animated-border::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 3px; /* thickness */
+  background: linear-gradient(90deg, #ff00ff, #a700d1, #ff00ff);
+  background-size: 300% 300%;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+
+  animation: border-move 6s linear infinite;
+}
+
+@keyframes border-move {
+  0% {
+    background-position: 0% 50%;
+  }
+  25% {
+    background-position: 100% 50%;
+  }
+  50% {
+    background-position: 100% 100%;
+  }
+  75% {
+    background-position: 0% 100%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}

@@ -1,7 +1,9 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function RacePageClient({ fno }: { fno: string }) {
+  const router = useRouter();
     const EVENT_START = new Date("2025-09-26T10:00:00+08:00"); // September 26, 2025, 10:00 AM SGT
 
   const [countdown, setCountdown] = useState({
@@ -10,6 +12,24 @@ export default function RacePageClient({ fno }: { fno: string }) {
     minutes: 0,
     seconds: 0,
   });
+  useEffect(() => {
+  async function checkRace() {
+    try {
+      const res = await fetch(`/api/check-race?fno=${fno}`);
+      const data = await res.json();
+
+      if (!data.exists) {
+        // ❌ redirect to /error if race number not found
+        router.replace("/error");
+      }
+    } catch (err) {
+      console.error("Race check failed", err);
+      router.replace("/error");
+    }
+  }
+
+  checkRace();
+}, [fno, router]);
 
   useEffect(() => {
     const interval = setInterval(() => {
