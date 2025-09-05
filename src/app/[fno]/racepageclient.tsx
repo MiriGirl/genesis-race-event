@@ -153,7 +153,7 @@ style={{
         margin: -18, // 🔑 remove spacing
       }}
     >
-      F10293
+      {fno}
     </h1>
   </div>
 </div>
