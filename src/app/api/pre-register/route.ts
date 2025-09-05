@@ -1,6 +1,7 @@
 // /src/app/api/pre-register/route.ts
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+
 // Force Node runtime (so supabase-js works) and disable static caching
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -15,9 +16,9 @@ const supabase = createClient(
 // ─────────────────────────────────────────────────────────
 const allowedOrigins = [
   "https://www.meuraki.com",
-  "http://localhost:3000",   // dev
-  "https://innerdrive.sg",   // prod
-  "https://www.innerdrive.sg", // add this if missing
+  "http://localhost:3000",     // dev
+  "https://innerdrive.sg",     // prod
+  "https://www.innerdrive.sg", // prod (www)
 ];
 
 function getCorsHeaders(origin: string | null) {
@@ -50,25 +51,15 @@ async function readPayload(req: Request) {
     const body = await req.text();
     return Object.fromEntries(new URLSearchParams(body));
   }
-  // fallback try JSON; if it fails, return empty
-  try { return await req.json(); } catch { return {}; }
+  try {
+    return await req.json();
+  } catch {
+    return {};
+  }
 }
 
 const normEmail = (email?: string) => (email || "").trim().toLowerCase();
 const normPhone = (phone?: string) => (phone || "").replace(/\s+/g, "");
-
-// Helper: check duplicate by email only
-async function findExistingByEmail(email_norm: string) {
-  const { data, error } = await supabase
-    .from("participants")
-    .select("id, race_no")
-    .eq("email_norm", email_norm)
-    .order("id", { ascending: false })
-    .limit(1);
-
-  if (error) throw error;
-  return data && data.length > 0 ? data[0] : null;
-}
 
 // ─────────────────────────────────────────────────────────
 // POST
@@ -99,7 +90,16 @@ export async function POST(req: Request) {
 
     if (!name || !email || !phone || !nationality || !age_group) {
       return NextResponse.json(
-        { error: "missing_fields", missing: { name: !name, email: !email, phone: !phone, nationality: !nationality, age_group: !age_group } },
+        {
+          error: "missing_fields",
+          missing: {
+            name: !name,
+            email: !email,
+            phone: !phone,
+            nationality: !nationality,
+            age_group: !age_group,
+          },
+        },
         { status: 400, headers }
       );
     }
@@ -107,53 +107,44 @@ export async function POST(req: Request) {
     const email_norm = normEmail(email);
     const phone_norm = normPhone(phone);
 
-    // Duplicate check (EMAIL ONLY)
-    const existing = await findExistingByEmail(email_norm);
-    if (existing) {
-      return NextResponse.json(
-        { ok: true, deduped: true, id: existing.id, race_no: existing.race_no },
-        { status: 200, headers }
-      );
-    }
-
-    // Insert new participant
+    // ──────────────────────────────────────────────
+    // UPSERT instead of insert + dedupe
+    // ──────────────────────────────────────────────
     const { data, error } = await supabase
       .from("participants")
-      .insert([
-        {
-          name,
-          email,
-          phone,
-          email_norm,
-          phone_norm,
-          nationality,
-          age_group,
-          line_type,
-          pre_registered: true,
-          source_system,
-          source_id,
-        },
-      ])
+      .upsert(
+        [
+          {
+            name,
+            email,
+            phone,
+            email_norm,
+            phone_norm,
+            nationality,
+            age_group,
+            line_type,
+            pre_registered: true,
+            source_system,
+            source_id,
+          },
+        ],
+        { onConflict: "email_norm" } // dedupe by normalized email
+      )
       .select("id, race_no")
       .single();
 
     if (error) {
-      // Handle race: unique constraint duplicate
-      if ((error as any).code === "23505") {
-        const again = await findExistingByEmail(email_norm);
-        return NextResponse.json(
-          { ok: true, deduped: true, id: again?.id, race_no: again?.race_no },
-          { status: 200, headers }
-        );
-      }
       return NextResponse.json({ error: error.message }, { status: 500, headers });
     }
 
     return NextResponse.json(
-      { ok: true, id: data!.id, race_no: data!.race_no, deduped: false },
+      { ok: true, id: data!.id, race_no: data!.race_no },
       { status: 200, headers }
     );
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message || "internal_error" }, { status: 500, headers });
+    return NextResponse.json(
+      { error: e?.message || "internal_error" },
+      { status: 500, headers }
+    );
   }
 }
