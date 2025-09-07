@@ -28,26 +28,46 @@ export default function RacePageClient() {
 
           {/* Dates */}
           <div className="flex justify-center items-center gap-2 mt-2">
+              {/* Start */}
             <div className="flex flex-col items-center justify-center rounded-[16px] bg-[#610B89] w-[70px] h-[70px]">
-              <span className="font-sans text-[30px] leading-[110%] text-white font-bold">
+              <span
+                className="font-sans text-[30px] leading-[110%] text-white"
+                style={{ fontWeight: 700 }}
+              >
                 26
               </span>
-              <span className="font-sans text-[18px] tracking-[0.04em] text-white">
+              <span
+                className="font-sans text-[18px] tracking-[0.04em] leading-[110%] text-white"
+                style={{ fontWeight: 400 }}
+              >
                 SEP
               </span>
             </div>
 
-            <span className="font-sans text-white text-[40px] font-normal">–</span>
+              {/* Dash */}
+            <span
+              className="font-sans text-white"
+              style={{ fontSize: "40px", fontWeight: 400, padding: "0 1 0px" }}
+            >
+              –
+            </span>
 
-            <div className="flex flex-col items-center justify-center rounded-[16px] bg-[#610B89] w-[70px] h-[70px]">
-              <span className="font-sans text-[30px] text-white font-bold">
-                05
-              </span>
-              <span className="font-sans text-[18px] tracking-[0.04em] text-white">
-                OCT
-              </span>
-            </div>
-          </div>
+  {/* End */}
+  <div className="flex flex-col items-center justify-center rounded-[16px] bg-[#610B89] w-[70px] h-[70px]">
+    <span
+      className="font-sans text-[30px] leading-[100%] text-white"
+      style={{ fontWeight: 700 }}
+    >
+      05
+    </span>
+    <span
+      className="font-sans text-[18px] tracking-[0.04em] leading-[100%] text-white"
+      style={{ fontWeight: 400 }}
+    >
+      OCT
+    </span>
+  </div>
+</div>
 
           {/* Race Number Section */}
           <div className="relative flex flex-col items-center text-center" style={{ marginTop: "140px", marginBottom:"60px" }}>
