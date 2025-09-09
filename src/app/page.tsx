@@ -86,7 +86,7 @@ export default function RacePageClient() {
     }}
   />
 
-              <div className="relative z-10 flex flex-col items-center justify-center h-[120px] w-[260px]">
+              <div className="relative z-10 flex flex-col items-center justify-center h-[120px] w-[220px]">
               <div
                 className="absolute inset-0 rounded-lg px-6 py-4"
                 style={{
