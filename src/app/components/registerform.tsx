@@ -16,17 +16,6 @@ export default function RegisterForm({ initialLineType }: { initialLineType: str
     console.log("📍 Initial line_type:", initialLineType);
   }, [initialLineType]);
 
-
-  const pathname = usePathname();
-
-useEffect(() => {
-  if (pathname?.includes("/f1")) {
-    setFormData((prev) => ({ ...prev, line_type: "f1" }));
-  } else if (pathname?.includes("/standard")) {
-    setFormData((prev) => ({ ...prev, line_type: "standard" }));
-  }
-}, [pathname]);
-
   
   useEffect(() => {
   console.log("🚀 Hydration check → line_type:", formData.line_type);

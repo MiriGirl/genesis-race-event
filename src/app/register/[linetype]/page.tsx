@@ -1,7 +1,7 @@
-"use client";
-import RegisterForm from "../../components/registerform";
+import RegisterForm from "@/app/components/registerform";
 
-export default function RegisterPage({ params }: { params: { lineType: string } }) {
-  // just pass params
-  return <RegisterForm initialLineType={params.lineType} />;
+export default function RegisterPage({ params }: { params: { linetype: string } }) {
+  const { linetype } = params;
+
+  return <RegisterForm initialLineType={linetype} />;
 }
