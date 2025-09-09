@@ -16,12 +16,14 @@ const supabase = createClient(
 // ─────────────────────────────────────────────────────────
 const allowedOrigins = [
   "https://www.meuraki.com",
-  "http://localhost:3000",     // dev
+  "http://localhost:3000", 
+  "http://localhost:3003",  // ✅ add this    // dev
   "https://innerdrive.sg",     // prod
   "https://www.innerdrive.sg", // prod (www)
 ];
 
 function getCorsHeaders(origin: string | null) {
+  console.log("🌐 Request Origin:", origin);
   const isAllowed = !!origin && allowedOrigins.includes(origin);
   const allowOrigin = isAllowed ? origin! : "https://www.meuraki.com";
   return {
