@@ -20,3 +20,13 @@ export default function RootLayout({
     </html>
   );
 }
+
+export const metadata = {
+  title: "InnerDrive Race",
+  description: "Race event app",
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/android-chrome-192x192",
+    apple: "/apple-touch-icon",
+  },
+};

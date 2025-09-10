@@ -1,7 +1,11 @@
 import RegisterForm from "@/app/components/registerform";
 
-export default function RegisterPage({ params }: { params: { linetype: string } }) {
-  const { linetype } = params;
+export default async function RegisterPage({
+  params,
+}: {
+  params: Promise<{ linetype: string }>;
+}) {
+  const { linetype } = await params;
 
-  return <RegisterForm />
+  return <RegisterForm initialLineType={linetype} />;
 }

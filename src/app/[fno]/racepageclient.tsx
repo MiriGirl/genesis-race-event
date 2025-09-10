@@ -56,7 +56,7 @@ export default function RacePageClient({ fno }: { fno: string }) {
     <div className="flex justify-center bg-black min-h-screen w-full">
       {/* Constrained container with background */}
       <div
-        className="relative w-full max-w-md min-h-screen bg-cover bg-center flex flex-col items-center text-white max-w-[400px]"
+        className="relative w-full max-w-md min-h-screen bg-cover bg-center flex flex-col items-center text-white max-w-[430px]"
         style={{ backgroundImage: "url(/bg/race-bg2.jpg)" }}
       >
         {/* Overlay (optional for readability) */}
