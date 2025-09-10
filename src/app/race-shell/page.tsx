@@ -3,6 +3,8 @@ import React, { useState } from "react";
 import EnterCode from "../components/entercode"; // ✅ make sure path is correct
 import Stopwatch from "../components/stopwatch";
 import Header from "../components/header";
+import RaceMap from "../components/racemap";
+
 
 <Header fno="F20293" name="MICHELLE NGIAM" raceTime="0:00:00" />
 
@@ -38,8 +40,9 @@ export default function RaceShell() {
         flag="/flags/sg.png"
         raceTime="0:00:00"
       />
-      
+
         {/* Main content */}
+                {/* Main content */}
         <div
           style={{
             flex: 1,
@@ -73,7 +76,8 @@ export default function RaceShell() {
                 fontWeight: activeTab === "map" ? 600 : 400,
                 fontSize: 16,
                 border: "none",
-                borderRadius: activeTab === "map" ? "50px" : "0", // ✅ full rounded when active
+                borderRadius: activeTab === "map" ? "50px" : "0",
+                transition: "all 0.3s ease",
               }}
             >
               Race Map
@@ -89,7 +93,8 @@ export default function RaceShell() {
                 fontWeight: activeTab === "leaderboard" ? 600 : 400,
                 fontSize: 16,
                 border: "none",
-                borderRadius: activeTab === "leaderboard" ? "50px" : "0", // ✅ full rounded when active
+                borderRadius: activeTab === "leaderboard" ? "50px" : "0",
+                transition: "all 0.3s ease",
               }}
             >
               Leaderboard
@@ -116,17 +121,16 @@ export default function RaceShell() {
                   alignItems: "center",
                 }}
               >
-                <img
-                  src="/bg/racemap.svg"
-                  alt="Race Map"
-                  style={{
-                    width: "100%",
-                    maxWidth: "350px",
-                    height: "auto",
-                  }}
-                />
+                {/* ✅ Replace image with RaceMap component */}
+                <RaceMap />
               </div>
-              <div style={{ position: "relative", textAlign: "center", marginTop: "16px" }}>
+              <div
+                style={{
+                  position: "relative",
+                  textAlign: "center",
+                  marginTop: "16px",
+                }}
+              >
                 <div
                   style={{
                     position: "absolute",
