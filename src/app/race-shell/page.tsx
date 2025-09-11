@@ -1,9 +1,12 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import EnterCode from "../components/entercode"; // ✅ make sure path is correct
 import Stopwatch from "../components/stopwatch";
 import Header from "../components/header";
 import RaceMap from "../components/racemap";
+import FooterEnter from "../components/footerenter";
+import FooterStopwatch from "../components/footerstopwatch";
+import FooterShell from "../components/footershell";
 
 
 <Header fno="F20293" name="MICHELLE NGIAM" raceTime="0:00:00" />
@@ -12,6 +15,9 @@ export default function RaceShell() {
   const [activeTab, setActiveTab] = useState<"map" | "leaderboard">("map");
   const [showEnterCode, setShowEnterCode] = useState(false);
   const [activeMode, setActiveMode] = useState<"enter" | "stopwatch">("enter");
+     const [hydrated, setHydrated] = useState(false);
+  useEffect(() => setHydrated(true), []);
+  if (!hydrated) return null; // or return a loading screen
 
   return (
     <div
@@ -131,29 +137,7 @@ export default function RaceShell() {
                   marginTop: "16px",
                 }}
               >
-                <div
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    backgroundColor: "#A700D1",
-                    opacity: 0.79,
-                    filter: "blur(15px)",
-                    zIndex: 0,
-                  }}
-                />
-                <div
-                  style={{
-                    position: "relative",
-                    zIndex: 2,
-                    color: "#fff",
-                    padding: "14px 0",
-                    fontWeight: 600,
-                    fontSize: "14px",
-                    letterSpacing: "0.05em",
-                  }}
-                >
-                  SELECT A SECTOR TO LEARN MORE
-                </div>
+                
               </div>
             </div>
 
@@ -175,140 +159,8 @@ export default function RaceShell() {
         </div>
 
        {/* Footer */}
-<footer
-  style={{
-    position: "fixed",
-    bottom: 0,
-    left: "50%",
-    transform: "translateX(-50%)",
-    width: "100%",
-    maxWidth: "430px",
-  }}
->
-  {activeMode === "enter" && !showEnterCode && (
-    // 🔹 Enter Mode Footer
-    <div
-      style={{
-        background: "#fff",
-        borderTopLeftRadius: "44px",
-        borderTopRightRadius: "44px",
-        textAlign: "center",
-        paddingBottom: "20px",
-      }}
-    >
-      <p
-        style={{
-          fontWeight: 700,
-          fontSize: "20px",
-          paddingTop: "20px",
-          marginBottom: "8px",
-          color: "#000",
-        }}
-      >
-        ENTER ANY SECTOR CODE
-      </p>
-      {/* circles */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          gap: "10px",
-          marginBottom: "20px",
-        }}
-      >
-        {[0, 0, 0, 0].map((digit, idx) => (
-          <div
-            key={idx}
-            style={{
-              width: "60px",
-              height: "60px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              borderRadius: "50%",
-              border: "2px solid #ccc",
-              background: "#EAEAEA",
-              fontSize: "28px",
-              fontWeight: 700,
-              color: "#777",
-            }}
-          >
-            {digit}
-          </div>
-        ))}
-      </div>
-      <button
-        className="font-dragracing"
-        onClick={() => setShowEnterCode(true)}
-        style={{
-          width: "100%",
-          maxWidth: "300px",
-          height: "52px",
-          background: "#000",
-          color: "#fff",
-          fontWeight: 600,
-          fontSize: "26px",
-          borderRadius: "48px",
-          textTransform: "uppercase",
-          letterSpacing: "0.05em",
-        }}
-      >
-        START
-      </button>
-    </div>
-  )}
 
-  {activeMode === "stopwatch" && (
-    // 🔹 Stopwatch Mode Footer (NO white background!)
-    <div
-      style={{
-        background: "#000",
-        textAlign: "center",
-        padding: "32px 16px",
-      }}
-    >
-      <p style={{ color: "#fff", fontSize: "14px", marginBottom: "8px" }}>
-        YOU ARE AT
-      </p>
-      <h2
-        style={{
-          color: "#fff",
-          fontSize: "28px",
-          fontWeight: 700,
-          marginBottom: "20px",
-        }}
-      >
-        SECTOR 3
-      </h2>
-
-      <Stopwatch
-        onFinish={(time) => {
-          console.log("Stopwatch finished:", time);
-          setActiveMode("enter");
-        }}
-      />
-
-      <button
-        className="font-dragracing"
-        onClick={() => setActiveMode("enter")}
-        style={{
-          marginTop: "24px",
-          background: "#A700D1",
-          border: "none",
-          borderRadius: "50px",
-          padding: "14px 32px",
-          color: "#fff",
-          fontSize: "20px",
-          fontWeight: 700,
-          textTransform: "uppercase",
-          boxShadow: "0 0 20px rgba(167,0,209,0.7)",
-        }}
-      >
-        FINISH
-      </button>
-    </div>
-  )}
-</footer>
+<FooterShell />
       </div>
 
       {/* ✅ EnterCode modal */}
