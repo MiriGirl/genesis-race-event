@@ -8,9 +8,17 @@ export default function RacePageClient() {
     <div className="flex justify-center bg-black min-h-screen w-full">
       {/* Constrained container with background */}
       <div
-        className="relative w-full max-w-md min-h-screen bg-cover bg-center flex flex-col items-center text-white max-w-[400px]"
-        style={{ backgroundImage: "url(/bg/race-bg2.jpg)" }}
+        className="relative w-full min-h-screen bg-cover bg-center flex flex-col items-center text-white"
+        style={{
+          maxWidth: "500px",
+          width: "100%",
+        }}
       >
+        <img
+          src="/bg/race-bg2.jpg"
+          alt="Race Background"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
         {/* Overlay */}
         <div className="absolute inset-0 bg-black/20" />
 
@@ -167,15 +175,21 @@ export default function RacePageClient() {
   <button
     onClick={async () => {
       try {
-        const res = await fetch(`/api/check-race?fno=F${fnoInput}`);
+        const raceNo = `F${fnoInput}`;
+        const res = await fetch(`/api/check-race?fno=${raceNo}`);
+        if (!res.ok) {
+          window.location.href = "/error";
+          return;
+        }
         const data = await res.json();
 
         if (data?.exists) {
-          window.location.href = `/F${fnoInput}`;
+          window.location.href = `${window.location.origin}/${raceNo}`;
         } else {
           window.location.href = "/error";
         }
-      } catch {
+      } catch (err) {
+        console.error("Fetch failed", err);
         window.location.href = "/error";
       }
     }}

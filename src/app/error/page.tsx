@@ -1,8 +1,15 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect } from "react";
 
 export default function ErrorPage() {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      window.location.href = window.location.origin;
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
   return (
     <div
       style={{

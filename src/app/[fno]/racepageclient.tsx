@@ -1,9 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 
 export default function RacePageClient({ fno }: { fno: string }) {
-  const router = useRouter();
     const EVENT_START = new Date("2025-09-26T10:00:00+08:00"); // September 26, 2025, 10:00 AM SGT
 
   const [countdown, setCountdown] = useState({
@@ -12,24 +10,7 @@ export default function RacePageClient({ fno }: { fno: string }) {
     minutes: 0,
     seconds: 0,
   });
-  useEffect(() => {
-  async function checkRace() {
-    try {
-      const res = await fetch(`/api/check-race?fno=${fno}`);
-      const data = await res.json();
 
-      if (!data.exists) {
-        // ❌ redirect to /error if race number not found
-        router.replace("/error");
-      }
-    } catch (err) {
-      console.error("Race check failed", err);
-      router.replace("/error");
-    }
-  }
-
-  checkRace();
-}, [fno, router]);
   useEffect(() => {
     const interval = setInterval(() => {
       const now = new Date();
@@ -56,7 +37,7 @@ export default function RacePageClient({ fno }: { fno: string }) {
     <div className="flex justify-center bg-black min-h-screen w-full">
       {/* Constrained container with background */}
       <div
-        className="relative w-full max-w-md min-h-screen bg-cover bg-center flex flex-col items-center text-white max-w-[430px]"
+        className="relative w-full max-w-md min-h-screen bg-cover bg-center flex flex-col items-center text-white max-w-[400px]"
         style={{ backgroundImage: "url(/bg/race-bg2.jpg)" }}
       >
         {/* Overlay (optional for readability) */}
@@ -172,7 +153,7 @@ style={{
         margin: -18, // 🔑 remove spacing
       }}
     >
-      {fno}
+     {fno.replace(/^f/i, "F")}
     </h1>
   </div>
 </div>
