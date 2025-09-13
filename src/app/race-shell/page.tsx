@@ -1,23 +1,18 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import EnterCode from "../components/entercode"; // ✅ make sure path is correct
-import Stopwatch from "../components/stopwatch";
 import Header from "../components/header";
 import RaceMap from "../components/racemap";
-import FooterEnter from "../components/footerenter";
-import FooterStopwatch from "../components/footerstopwatch";
 import FooterShell from "../components/footershell";
-
-
-<Header fno="F20293" name="MICHELLE NGIAM" raceTime="0:00:00" />
 
 export default function RaceShell() {
   const [activeTab, setActiveTab] = useState<"map" | "leaderboard">("map");
-  const [showEnterCode, setShowEnterCode] = useState(false);
-  const [activeMode, setActiveMode] = useState<"enter" | "stopwatch">("enter");
-     const [hydrated, setHydrated] = useState(false);
-  useEffect(() => setHydrated(true), []);
-  if (!hydrated) return null; // or return a loading screen
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
+
+  if (!hydrated) return null; // ✅ Prevent hydration mismatch
 
   return (
     <div
@@ -28,7 +23,6 @@ export default function RaceShell() {
         minHeight: "100vh",
       }}
     >
-      {/* Constrained container */}
       <div
         style={{
           width: "100%",
@@ -40,15 +34,15 @@ export default function RaceShell() {
           flexDirection: "column",
         }}
       >
+        {/* ✅ Header */}
         <Header
-        fno="F20293"
-        name="MICHELLE NGIAM"
-        flag="/flags/sg.png"
-        raceTime="0:00:00"
-      />
+          fno="F20293"
+          name="MICHELLE NGIAM"
+          flag="/flags/sg.png"
+          raceTime="0:00:00"
+        />
 
-        {/* Main content */}
-                {/* Main content */}
+        {/* ✅ Main Content */}
         <div
           style={{
             flex: 1,
@@ -61,7 +55,7 @@ export default function RaceShell() {
             overflowY: "auto",
           }}
         >
-          {/* Toggle buttons */}
+          {/* Toggle Buttons */}
           <div
             style={{
               display: "flex",
@@ -109,74 +103,42 @@ export default function RaceShell() {
 
           {/* Tab Content */}
           <div style={{ flex: 1, position: "relative" }}>
-            {/* Map Tab */}
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                opacity: activeTab === "map" ? 1 : 0,
-                transition: "opacity 0.4s ease",
-                pointerEvents: activeTab === "map" ? "auto" : "none",
-              }}
-            >
+            {/* ✅ Race Map */}
+            {activeTab === "map" && (
               <div
                 style={{
                   flex: 1,
+                  minHeight: "25vh",
                   display: "flex",
                   justifyContent: "center",
                   alignItems: "center",
+                  overflow: "visible",
+                  marginTop: -20,
                 }}
               >
-                {/* ✅ Replace image with RaceMap component */}
                 <RaceMap />
               </div>
+            )}
+
+            {/* ✅ Leaderboard Placeholder */}
+            {activeTab === "leaderboard" && (
               <div
                 style={{
-                  position: "relative",
+                  position: "absolute",
+                  inset: 0,
+                  color: "#fff",
                   textAlign: "center",
-                  marginTop: "16px",
                 }}
               >
-                
+                <p>Leaderboard Placeholder</p>
               </div>
-            </div>
-
-            {/* Leaderboard Tab */}
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                opacity: activeTab === "leaderboard" ? 1 : 0,
-                transition: "opacity 0.4s ease",
-                pointerEvents: activeTab === "leaderboard" ? "auto" : "none",
-                color: "#fff",
-                textAlign: "center",
-              }}
-            >
-              <p>Leaderboard Placeholder</p>
-            </div>
+            )}
           </div>
         </div>
 
-       {/* Footer */}
-
-<FooterShell />
+        {/* ✅ Footer */}
+        <FooterShell />
       </div>
-
-      {/* ✅ EnterCode modal */}
-      <EnterCode
-        isOpen={showEnterCode}
-        onClose={() => setShowEnterCode(false)}
-        onSubmit={(code) => {
-          console.log("Code entered:", code);
-
-          if (code === "1111") {
-            setActiveMode("stopwatch"); // 🔥 switch footer
-          }
-
-          setShowEnterCode(false);
-        }}
-      />
     </div>
   );
 }

@@ -1,40 +1,125 @@
-"use client";
-import React from "react";
+import MapSVG from "./map";
 
-export default function RaceMap() {
+interface RaceMapProps {
+  currentSector: number | null; // null = all idle
+}
+
+export default function RaceMap({ currentSector }: RaceMapProps) {
   return (
-    <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
-      <img
-        src="/bg/racemap.svg"
-        alt="Race Map"
-        style={{ width: "100%", maxWidth: "350px", height: "auto" }}
-      />
+    <div style={{ display: "flex", justifyContent: "center" }}>
+      <MapSVG style={{ width: "100%", height: "auto" }} />
+      <style jsx global>{`
+        /* ✅ If no currentSector, everything stays idle */
+        ${currentSector === null
+          ? `
+          #track-1, #track-2, #track-3, #track-4, #track-5, #track-6 {
+            stroke: #dadada;
+            stroke-opacity: 0.2;
+            stroke-width: 12;
+          }
 
-      <div style={{ position: "relative", textAlign: "center", marginTop: "16px", width: "100%" }}>
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            backgroundColor: "#A700D1",
-            opacity: 0.79,
-            filter: "blur(15px)",
-            zIndex: 0,
-          }}
-        />
-        <div
-          style={{
-            position: "relative",
-            zIndex: 2,
-            color: "#fff",
-            padding: "14px 0",
-            fontWeight: 600,
-            fontSize: "14px",
-            letterSpacing: "0.05em",
-          }}
-        >
-          SELECT A SECTOR TO LEARN MORE
-        </div>
-      </div>
+          /* 🔮 Sector 1 pulses as a group (circle + text) */
+          #number-1 {
+            animation: pulseGroup 2s infinite ease-in-out;
+            transform-origin: center;
+            filter: drop-shadow(0 0 4px #a349ef);
+          }
+
+          /* Other circles idle grey */
+          #number-2, #number-3, #number-4, #number-5, #number-6 {
+            fill: #dadada;
+          }
+          text[id="2"], text[id="3"], text[id="4"], text[id="5"], text[id="6"] {
+            fill: #a349ef;
+          }
+        `
+          : ""}
+
+        /* ✅ Completed sectors (before currentSector) */
+        ${currentSector && currentSector > 1
+          ? Array.from({ length: currentSector - 1 }, (_, i) => {
+              const sector = i + 1;
+              return `
+                #track-${sector} {
+                  stroke: #610b89;
+                  stroke-width: 12;
+                  stroke-linecap: round;
+                  filter: drop-shadow(0px 0px 4px #610b89);
+                }
+                #number-${sector} {
+                  fill: #610b89;
+                }
+                text[id="${sector}"] {
+                  fill: #ffffff;
+                }
+              `;
+            }).join("\n")
+          : ""}
+
+        /* ✅ Active sector (only if provided) */
+        ${currentSector
+          ? `
+          #track-${currentSector} {
+            stroke: #a349ef;
+            stroke-width: 12;
+            stroke-linecap: round;
+            filter: drop-shadow(0px 0px 6px #a349ef);
+            stroke-dasharray: 1200;
+            stroke-dashoffset: 1200;
+            animation: dashForward 12s linear infinite;
+          }
+          #number-${currentSector} {
+            fill: #a349ef;
+            animation: pulseGlow 2s infinite ease-in-out;
+          }
+          text[id="${currentSector}"] {
+            fill: #ffffff;
+          }
+        `
+          : ""}
+
+        /* ✅ Idle sectors (after currentSector or all if null) */
+        ${
+          currentSector
+            ? Array.from({ length: 6 - currentSector }, (_, i) => {
+                const sector = currentSector + i + 1;
+                return `
+                  #track-${sector} {
+                    stroke: #dadada;
+                    stroke-opacity: 0.2;
+                    stroke-width: 12;
+                  }
+                  #number-${sector} {
+                    fill: #dadada;
+                  }
+                  text[id="${sector}"] {
+                    fill: #a349ef;
+                  }
+                `;
+              }).join("\n")
+            : ""
+        }
+
+        /* 🔮 Pulse glow for active circle */
+        @keyframes pulseGlow {
+          0% { filter: drop-shadow(0 0 2px #a349ef); }
+          50% { filter: drop-shadow(0 0 8px #a349ef); }
+          100% { filter: drop-shadow(0 0 2px #a349ef); }
+        }
+
+        /* 🔮 Pulse whole group in idle */
+        @keyframes pulseGroup {
+          0% { transform: scale(1); opacity: 1; }
+          50% { transform: scale(1.1); opacity: 0.9; }
+          100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Smooth forward animation */
+        @keyframes dashForward {
+          from { stroke-dashoffset: 1200; }
+          to { stroke-dashoffset: 0; }
+        }
+      `}</style>
     </div>
   );
 }

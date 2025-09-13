@@ -5,13 +5,38 @@ import { motion, AnimatePresence } from "framer-motion";
 interface EnterCodeProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (code: string) => void;
+  onSubmit: (code: string, sectorNumber: number) => void;
+  currentSector: number; // ✅ parent passes current completed sector
+  errorMessage?: string;
 }
 
-export default function EnterCode({ isOpen, onClose, onSubmit }: EnterCodeProps) {
+export default function EnterCode({ isOpen, onClose, onSubmit, currentSector, errorMessage }: EnterCodeProps) {
   const [digits, setDigits] = useState(["", "", "", ""]);
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
   const [error, setError] = useState(false);
+  const [localErrorMessage, setLocalErrorMessage] = useState("");
+
+  // ✅ static codes
+  const validCodes: Record<string, number> = {
+    "1111": 1,
+    "2222": 2,
+    "3333": 3,
+    "4444": 4,
+    "5555": 5,
+    "6666": 6,
+  };
+
+  const triggerError = (msg: string) => {
+    setError(true);
+    setLocalErrorMessage(msg);
+    if (navigator.vibrate) navigator.vibrate(200);
+    setTimeout(() => {
+      setError(false);
+      setDigits(["", "", "", ""]);
+      const firstInput = document.getElementById("digit-0") as HTMLInputElement | null;
+      firstInput?.focus();
+    }, 1000);
+  };
 
   const handleChange = (value: string, index: number) => {
     if (/^[0-9a-zA-Z]?$/.test(value)) {
@@ -19,28 +44,28 @@ export default function EnterCode({ isOpen, onClose, onSubmit }: EnterCodeProps)
       newDigits[index] = value.toUpperCase();
       setDigits(newDigits);
 
-      // auto focus next box
+      // auto focus next
       if (value && index < digits.length - 1) {
         const nextInput = document.getElementById(`digit-${index + 1}`);
         nextInput?.focus();
       }
 
-      // auto-verify when last digit is filled
+      // auto verify on last digit
       if (index === digits.length - 1 && value) {
         const code = newDigits.join("");
-        if (code === "1111") {
-          onSubmit(code);
-          setDigits(["", "", "", ""]);
-          onClose();
-        } else {
-          setError(true);
-          if (navigator.vibrate) navigator.vibrate(200); // haptic feedback
-          setTimeout(() => {
-            setError(false);
+        if (validCodes[code]) {
+          const sectorNumber = validCodes[code];
+
+          // ✅ Check sector order based on currentSector
+          if (sectorNumber === currentSector + 1) {
+            onSubmit(code, sectorNumber); // send to parent
             setDigits(["", "", "", ""]);
-            const firstInput = document.getElementById("digit-0") as HTMLInputElement | null;
-            firstInput?.focus();
-          }, 1000);
+            onClose();
+          } else {
+            triggerError(`Please finish sector ${currentSector + 1} first.`);
+          }
+        } else {
+          triggerError("Wrong Code. Please try again.");
         }
       }
     }
@@ -99,7 +124,7 @@ export default function EnterCode({ isOpen, onClose, onSubmit }: EnterCodeProps)
             ✕
           </button>
 
-          {/* Bottom sheet card */}
+          {/* Bottom sheet */}
           <motion.div
             key="enter-code-sheet"
             initial={{ y: "100%", opacity: 0 }}
@@ -123,7 +148,7 @@ export default function EnterCode({ isOpen, onClose, onSubmit }: EnterCodeProps)
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Code Entry First */}
+            {/* Heading */}
             <h3
               style={{
                 textAlign: "center",
@@ -136,6 +161,7 @@ export default function EnterCode({ isOpen, onClose, onSubmit }: EnterCodeProps)
               ENTER ANY SECTOR CODE
             </h3>
 
+            {/* Code inputs */}
             <motion.div
               animate={error ? { x: [-10, 10, -10, 10, 0] } : { x: 0 }}
               transition={{ duration: 0.4 }}
@@ -181,7 +207,7 @@ export default function EnterCode({ isOpen, onClose, onSubmit }: EnterCodeProps)
                       }}
                     />
 
-                    {/* Inner circle */}
+                    {/* Inner input */}
                     <input
                       id={`digit-${index}`}
                       type="text"
@@ -210,10 +236,10 @@ export default function EnterCode({ isOpen, onClose, onSubmit }: EnterCodeProps)
               })}
             </motion.div>
 
-            {/* Error message with reserved space */}
+            {/* Error message */}
             <div style={{ minHeight: "28px", marginTop: "8px" }}>
               <AnimatePresence>
-                {error && (
+                {(error || errorMessage) && (
                   <motion.p
                     initial={{ opacity: 0, y: -4 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -221,13 +247,13 @@ export default function EnterCode({ isOpen, onClose, onSubmit }: EnterCodeProps)
                     transition={{ duration: 0.3 }}
                     style={{ textAlign: "center", color: "red", fontSize: "14px" }}
                   >
-                    Wrong Code. Please try again
+                    {errorMessage || localErrorMessage}
                   </motion.p>
                 )}
               </AnimatePresence>
             </div>
 
-            {/* Instructions Below */}
+            {/* Instructions */}
             <h2
               style={{
                 fontSize: "24px",
