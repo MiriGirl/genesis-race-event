@@ -2,7 +2,7 @@
 import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-function LoadingContent() {
+function RegistrationLoadingContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const finalNumber = searchParams.get("fno"); // get race number from query
@@ -127,7 +127,7 @@ function LoadingContent() {
 export default function LoadingPage() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <LoadingContent />
+      <RegistrationLoadingContent />
     </Suspense>
   );
 }

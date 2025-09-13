@@ -4,6 +4,8 @@ import RacePageClient from "./racepageclient";
 export const dynamic = "force-dynamic";
 
 export default function RacePage({ params }: { params: { fno: string } }) {
-  // Always render the client component with whatever FNO is passed
-  return <RacePageClient fno={params.fno} />;
+  // Normalize the race number to lowercase to avoid case-sensitivity issues on Vercel
+  const fno = params.fno.toLowerCase();
+
+  return <RacePageClient fno={fno} />;
 }
