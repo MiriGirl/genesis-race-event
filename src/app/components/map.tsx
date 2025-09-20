@@ -1,8 +1,22 @@
 import * as React from "react";
 const MapSVG = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg
+  <div
+      style={{
+        width: "100%",
+        display: "flex",
+        justifyContent: "center", // centers the map
+      }}
+    >
+      <div
+        style={{
+          width: "100%",
+          maxWidth: "500px", // clamp max size
+          minWidth: "320px", // clamp min size
+        }}
+      >
+        <svg
   
-    width={330}
+    width={425}
     height={345}
     viewBox="0 0 356 345"
     fill="none"
@@ -966,5 +980,7 @@ const MapSVG = (props: React.SVGProps<SVGSVGElement>) => (
       />
     </defs>
   </svg>
+    </div>
+    </div>
 );
 export default MapSVG;

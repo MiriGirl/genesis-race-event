@@ -1,17 +1,54 @@
 "use client";
 import React, { useState } from "react";
 import { motion } from "framer-motion";
+import EnterCode from "./entercode";
 
 type FooterEnterProps = {
   currentSector: number | null;
   onStart: () => void;
+  raceNo: string;
+  participantId: string;
+  stationId: string;
+  bib: string;
+  accessCode: string;
+  onCodeSubmit: () => void;
 };
 
-export default function FooterEnter({ currentSector, onStart }: FooterEnterProps) {
-  // All sector code logic removed
+export default function FooterEnter({
+  currentSector,
+  onStart,
+  raceNo,
+  participantId,
+  stationId,
+  bib,
+  accessCode,
+  onCodeSubmit,
+}: FooterEnterProps) {
+  const [showEnterCode, setShowEnterCode] = useState(false);
+
   const handleStart = () => {
-    onStart();
+    setShowEnterCode(true);
   };
+
+  if (showEnterCode) {
+    return (
+      <EnterCode
+        isOpen={showEnterCode}
+        onClose={() => setShowEnterCode(false)}
+        onSubmit={(code) => {
+          console.log("submitted code", code);
+          setShowEnterCode(false);
+          onCodeSubmit();
+        }}
+        currentSector={currentSector ?? 1}
+        raceNo={raceNo}
+        participantId={participantId}
+        stationId={stationId}
+        bib={bib}
+        accessCode={accessCode}
+      />
+    );
+  }
 
   return (
     <>
@@ -20,7 +57,7 @@ export default function FooterEnter({ currentSector, onStart }: FooterEnterProps
         style={{
           position: "relative",
           textAlign: "center",
-          marginTop: "16px",
+          marginTop: "0px",
           width: "100%",
         }}
       >
@@ -28,7 +65,7 @@ export default function FooterEnter({ currentSector, onStart }: FooterEnterProps
           style={{
             position: "absolute",
             inset: 0,
-            height: "50px",
+            height: "40px",
             backgroundColor: "#A700D1",
             opacity: 0.79,
             filter: "blur(20px)",
@@ -52,6 +89,7 @@ export default function FooterEnter({ currentSector, onStart }: FooterEnterProps
 
       {/* White card */}
       <motion.div
+        onClick={handleStart}
         initial={{ y: 50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 50, opacity: 0 }}
@@ -62,15 +100,17 @@ export default function FooterEnter({ currentSector, onStart }: FooterEnterProps
           borderTopRightRadius: "44px",
           textAlign: "center",
           paddingBottom: "20px",
+          paddingTop: 10,
           position: "relative",
           zIndex: 1,
+          marginTop: "10%",
         }}
       >
         <p
           style={{
             fontWeight: 700,
             fontSize: "20px",
-            paddingTop: "20px",
+            paddingTop: "0px",
             marginBottom: "8px",
             color: "#000",
           }}
@@ -112,7 +152,6 @@ export default function FooterEnter({ currentSector, onStart }: FooterEnterProps
         {/* Start button */}
         <motion.button
           className="font-dragracing"
-          onClick={handleStart}
           whileTap={{ scale: 0.95 }}
           whileHover={{ scale: 1.05 }}
           style={{

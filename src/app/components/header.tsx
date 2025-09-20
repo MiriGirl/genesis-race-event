@@ -1,19 +1,32 @@
 "use client";
 import React from "react";
+import { nationalities } from "@/data/nationalities";
 
 interface HeaderProps {
   fno: string;
   name: string;
-  flag?: string;
+  country?: string;
   raceTime?: string;
+  flag?: string;
 }
 
 export default function Header({
-  fno = "F20293",
-  name = "MICHELLE NGIAM",
-  flag = "/flags/sg.png",
-  raceTime = "0:00:00",
+  fno,
+  name,
+  country,
+  raceTime,
+  flag,
 }: HeaderProps) {
+  const flagEmoji = flag
+    ? flag
+    : country
+    ? nationalities[
+        Object.keys(nationalities).find(
+          (key) => key.toLowerCase() === country.toLowerCase()
+        ) || ""
+      ] || "🏳️"
+    : "🏳️";
+
   return (
     <header
       style={{
@@ -28,11 +41,7 @@ export default function Header({
     >
       {/* Left: Flag + FNO + Name */}
       <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-        <img
-          src={flag}
-          alt="flag"
-          style={{ width: "28px", height: "20px", objectFit: "cover" }}
-        />
+        <span style={{ fontSize: "40px", lineHeight: 1 }}>{flagEmoji}</span>
         <div style={{ display: "flex", flexDirection: "column", lineHeight: 1 }}>
           <span
             className="font-dragracing"
@@ -47,10 +56,14 @@ export default function Header({
             {fno}
           </span>
           <span
+          className="font-dragracing"
             style={{
-              fontSize: "14px",
+              
+              fontSize: "15px",
               fontWeight: 500,
-              color: "#ccc",
+              color: "#fff",
+               textTransform: "uppercase",
+               letterSpacing: "0.1em",
             }}
           >
             {name}

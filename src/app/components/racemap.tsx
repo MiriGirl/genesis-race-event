@@ -2,9 +2,10 @@ import MapSVG from "./map";
 
 interface RaceMapProps {
   currentSector: number | null; // null = all idle
+  sectors?: { id: number; status: "completed" | "active" | "idle" }[];
 }
 
-export default function RaceMap({ currentSector }: RaceMapProps) {
+export default function RaceMap({ currentSector, sectors }: RaceMapProps) {
   return (
     <div style={{ display: "flex", justifyContent: "center" }}>
       <MapSVG style={{ width: "100%", height: "auto" }} />
@@ -99,6 +100,64 @@ export default function RaceMap({ currentSector }: RaceMapProps) {
               }).join("\n")
             : ""
         }
+
+        /* ✅ Sector states from sectors prop */
+        ${sectors && sectors.length > 0
+          ? sectors
+              .map(({ id, status }) => {
+                if (status === "completed") {
+                  return `
+                    #track-${id} {
+                      stroke: #610b89;
+                      stroke-width: 12;
+                      stroke-linecap: round;
+                      filter: drop-shadow(0px 0px 4px #610b89);
+                    }
+                    #number-${id} {
+                      fill: #610b89;
+                    }
+                    text[id="${id}"] {
+                      fill: #ffffff;
+                    }
+                  `;
+                } else if (status === "active") {
+                  return `
+                    #track-${id} {
+                      stroke: #a349ef;
+                      stroke-width: 12;
+                      stroke-linecap: round;
+                      filter: drop-shadow(0px 0px 6px #a349ef);
+                      stroke-dasharray: 1200;
+                      stroke-dashoffset: 1200;
+                      animation: dashForward 12s linear infinite;
+                    }
+                    #number-${id} {
+                      fill: #a349ef;
+                      animation: pulseGlow 2s infinite ease-in-out;
+                    }
+                    text[id="${id}"] {
+                      fill: #ffffff;
+                    }
+                  `;
+                } else if (status === "idle") {
+                  return `
+                    #track-${id} {
+                      stroke: #dadada;
+                      stroke-opacity: 0.2;
+                      stroke-width: 12;
+                    }
+                    #number-${id} {
+                      fill: #dadada;
+                    }
+                    text[id="${id}"] {
+                      fill: #a349ef;
+                    }
+                  `;
+                }
+                return "";
+              })
+              .join("\n")
+          : ""}
 
         /* 🔮 Pulse glow for active circle */
         @keyframes pulseGlow {

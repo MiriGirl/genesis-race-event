@@ -8,20 +8,37 @@ const supabase = createClient(
 
 export async function POST(req: Request) {
   try {
-    const { raceNo, accessCode } = await req.json();
+    const { bib, accessCode } = await req.json();
+    console.log("DEBUG BODY:", { bib, accessCode });
 
-    if (!raceNo || !accessCode) {
+    if (!bib || !accessCode) {
+      console.error("Missing bib or accessCode", { bib, accessCode });
       return NextResponse.json(
-        { error: "Missing raceNo or accessCode" },
+        { error: "Missing bib or accessCode" },
         { status: 400 }
       );
     }
 
-    // 1. Find participant
+    // Normalize bib/race_no
+    let bibValue: number | null = null;
+    let raceNo: string | null = null;
+
+    if (typeof bib === "string") {
+      if (bib.startsWith("F")) {
+        raceNo = bib; // e.g. "F10327"
+        bibValue = parseInt(bib.slice(1), 10); // e.g. 10327
+      } else {
+        bibValue = parseInt(bib, 10);
+      }
+    } else if (typeof bib === "number") {
+      bibValue = bib;
+    }
+
+    // 1. Find participant by race_no or bib
     const { data: participant, error: pError } = await supabase
       .from("participants")
       .select("id, race_no, started_at, finished_at, checkpoints_count")
-      .eq("race_no", raceNo)
+      .or(`race_no.eq.${raceNo || ""},bib.eq.${bibValue || -1}`)
       .single();
 
     if (pError || !participant) {
@@ -134,13 +151,20 @@ export async function POST(req: Request) {
       split_ms: null,
     });
 
-if (insertError) {
-  console.error("Error inserting checkpoint:", insertError.message);
-  return NextResponse.json(
-    { error: "Failed to start sector", details: insertError.message },
-    { status: 500 }
-  );
-}
+    if (!insertError) {
+      await supabase
+        .from("participants")
+        .update({ status: "started" })
+        .eq("id", participant.id);
+    }
+
+    if (insertError) {
+      console.error("Error inserting checkpoint:", insertError.message);
+      return NextResponse.json(
+        { error: "Failed to start sector", details: insertError.message },
+        { status: 500 }
+      );
+    }
 
     // Find current active sector (if any) — two-step lookup to avoid join ambiguity
     let currentSector: number | null = null;

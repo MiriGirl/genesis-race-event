@@ -9,20 +9,30 @@ const supabase = createClient(
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const raceNo = searchParams.get("raceNo");
+    const participantId = searchParams.get("participantId");
+    let fno = searchParams.get("fno");
 
-    if (!raceNo) {
+    if (!participantId && !fno) {
       return NextResponse.json(
-        { error: "Missing raceNo" },
+        { error: "Must provide either participantId or fno as query parameter" },
         { status: 400 }
       );
     }
 
-    const { data: participant, error } = await supabase
+    let query = supabase
       .from("participants")
-      .select("id, bib, race_no, name, nationality, email, phone")
-      .eq("race_no", raceNo)
-      .maybeSingle(); // ✅ avoids hard crash if multiple rows
+      .select("id, bib, race_no, name, nationality, email, phone");
+
+    if (participantId) {
+      query = query.eq("id", participantId);
+    } else {
+      if (!fno) {
+        fno = "F10327";
+      }
+      query = query.eq("race_no", fno);
+    }
+
+    const { data: participant, error } = await query.maybeSingle(); // ✅ avoids hard crash if multiple rows
 
     if (error) {
       console.error("Supabase query error:", error);
@@ -42,7 +52,7 @@ export async function GET(req: Request) {
     return NextResponse.json({
       id: participant.id,
       bib: participant.bib,
-      raceNo: participant.race_no,
+      fno: participant.race_no,
       name: participant.name,
       country: participant.nationality ?? "UNKNOWN",
       email: participant.email,

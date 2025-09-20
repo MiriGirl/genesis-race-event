@@ -1,22 +1,50 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 interface FooterStopwatchProps {
-  currentSector: number; // ✅ which sector we’re at
+  currentSector: number | null; // ✅ which sector we’re at
   onFinish: (splitMs: number) => void;  // ✅ callback to trigger finish with split time in ms
+  onStop?: () => void;
+  raceNo: string;
+  participantId: string;
+  stationId: string;
+  accessCode: string;
+  startTime: string;
+  bib: string;
 }
 
-export default function FooterStopwatch({ currentSector, onFinish }: FooterStopwatchProps) {
+export default function FooterStopwatch({ currentSector, onFinish, onStop, raceNo, participantId, stationId, accessCode, startTime, bib }: FooterStopwatchProps) {
   const [time, setTime] = useState(0);
   const [running, setRunning] = useState(true);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  // Log when component renders
+  console.log("FooterStopwatch rendered with currentSector:", currentSector, "time:", time);
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    const startTimestamp = startTime ? new Date(startTime).getTime() : Date.now();
     if (running) {
-      interval = setInterval(() => setTime((t) => t + 1), 1000);
+      timerRef.current = setInterval(() => {
+        setTime(Math.floor((Date.now() - startTimestamp) / 1000) || 0);
+      }, 1000);
     }
-    return () => clearInterval(interval);
-  }, [running]);
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, [startTime, running]);
+
+  useEffect(() => {
+    console.log("🔍 FooterStopwatch props:", {
+      currentSector,
+      raceNo,
+      participantId,
+      stationId,
+      accessCode,
+      startTime,
+      bib,
+    });
+  }, [currentSector, raceNo, participantId, stationId, accessCode, startTime, bib]);
 
   const formatTime = (secs: number) => {
     const m = String(Math.floor(secs / 60)).padStart(2, "0");
@@ -29,6 +57,18 @@ export default function FooterStopwatch({ currentSector, onFinish }: FooterStopw
   const circumference = 2 * Math.PI * radius;
   const seconds = time % 60;
   const progress = (seconds / 60) * circumference;
+
+  const refreshRaceStatus = async () => {
+    try {
+      const res = await fetch(`/api/race-status?raceNo=${raceNo}&bib=${bib}`);
+      if (res.ok) {
+        const data = await res.json();
+        console.log("🔄 Refreshed race status after finish:", data);
+      }
+    } catch (err) {
+      console.error("Error refreshing race status after finish:", err);
+    }
+  };
 
   return (
     <div
@@ -133,9 +173,51 @@ export default function FooterStopwatch({ currentSector, onFinish }: FooterStopw
 
       {/* Finish Button */}
       <button
-        onClick={() => {
-          setRunning(false);
-          onFinish(time * 1000);
+        onClick={async () => {
+          const confirmFinish = window.confirm(
+            "Are you sure you want to finish and send your split time? This will stop the timer."
+          );
+          if (!confirmFinish) return;
+          if (timerRef.current) {
+            clearInterval(timerRef.current);
+          }
+          const splitMs = time * 1000;
+          console.log("➡️ Sending save-split payload:", {
+            raceNo,
+            participantId,
+            stationId,
+            accessCode,
+            split_ms: splitMs,
+            completedAt: new Date().toISOString(),
+          });
+          try {
+            const response = await fetch("/api/save-split", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                raceNo: raceNo,
+                participantId: participantId,
+                stationId: stationId,
+                accessCode: accessCode,
+                split_ms: splitMs,
+                completedAt: new Date().toISOString(),
+              }),
+            });
+            if (!response.ok) {
+              throw new Error(`Failed to save split: ${response.status}`);
+            }
+            const result = await response.json();
+            console.log("Split saved:", result);
+            setTimeout(async () => {
+              await refreshRaceStatus(); // check API for updated state
+              setRunning(false);
+              onFinish(splitMs); // let FooterShell decide next view
+            }, 2000);
+          } catch (error) {
+            console.error("Error saving split:", error);
+          }
         }}
         className="font-dragracing"
         style={{

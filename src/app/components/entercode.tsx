@@ -1,16 +1,38 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useParams } from "next/navigation";
 
 interface EnterCodeProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (code: string, sectorNumber: number) => void;
-  currentSector: number; // ✅ parent passes current completed sector
+  onSubmit: (data: { accessCode: string; sectorNumber: number }) => void;
+  currentSector: number;
   errorMessage?: string;
+  raceNo: string; // added to pass race number
+  participantId: string; // added to pass participant id
+  bib: string;
+  stationId: string;
+  accessCode?: string;
 }
 
-export default function EnterCode({ isOpen, onClose, onSubmit, currentSector, errorMessage }: EnterCodeProps) {
+export default function EnterCode({ isOpen, onClose, onSubmit, currentSector, errorMessage, raceNo, participantId, bib, stationId, accessCode }: EnterCodeProps) {
+  const params = useParams();
+  const raceNoFromUrl = params?.raceNo as string;
+  const resolvedRaceNo = raceNo || raceNoFromUrl;
+  const resolvedBib = resolvedRaceNo.replace(/^F/, "");
+
+  const [localStationId, setLocalStationId] = useState<string>(stationId || "");
+
+  console.log("EnterCode resolved values:", {
+    raceNo: resolvedRaceNo,
+    participantId,
+    bib: resolvedBib,
+    stationId: localStationId,
+    currentSector,
+    accessCode: accessCode || "(not yet entered)",
+  });
+
   const [digits, setDigits] = useState(["", "", "", ""]);
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
   const [error, setError] = useState(false);
@@ -26,6 +48,27 @@ export default function EnterCode({ isOpen, onClose, onSubmit, currentSector, er
     "6666": 6,
   };
 
+  useEffect(() => {
+    if (isOpen) {
+      const fetchStation = async () => {
+        try {
+          const res = await fetch(`/api/race-status?raceNo=${resolvedRaceNo}&bib=${resolvedBib}`, {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+          });
+          const data = await res.json();
+          console.log("🔄 EnterCode fetched race-status:", data);
+          if (data.stationId) {
+            setLocalStationId(data.stationId);
+          }
+        } catch (err) {
+          console.error("Error fetching stationId in EnterCode:", err);
+        }
+      };
+      fetchStation();
+    }
+  }, [isOpen, resolvedRaceNo, resolvedBib]);
+
   const triggerError = (msg: string) => {
     setError(true);
     setLocalErrorMessage(msg);
@@ -38,7 +81,7 @@ export default function EnterCode({ isOpen, onClose, onSubmit, currentSector, er
     }, 1000);
   };
 
-  const handleChange = (value: string, index: number) => {
+  const handleChange = async (value: string, index: number) => {
     if (/^[0-9a-zA-Z]?$/.test(value)) {
       const newDigits = [...digits];
       newDigits[index] = value.toUpperCase();
@@ -53,18 +96,49 @@ export default function EnterCode({ isOpen, onClose, onSubmit, currentSector, er
       // auto verify on last digit
       if (index === digits.length - 1 && value) {
         const code = newDigits.join("");
-        if (validCodes[code]) {
-          const sectorNumber = validCodes[code];
+        const expectedSector = currentSector;
+        const enteredSector = validCodes[code];
 
-          // ✅ Check sector order based on currentSector
-          if (sectorNumber === currentSector + 1) {
-            onSubmit(code, sectorNumber); // send to parent
+        if (!enteredSector) {
+          triggerError("Wrong Code. Please try again.");
+          return;
+        }
+
+        if (enteredSector < expectedSector) {
+          triggerError(`You already completed Sector ${enteredSector}. Enter Sector ${expectedSector} code.`);
+          return;
+        }
+
+        if (enteredSector > expectedSector) {
+          triggerError(`Finish Sector ${expectedSector} first.`);
+          return;
+        }
+
+        console.log("Submitting checkpoint with:", { resolvedRaceNo, resolvedBib, participantId, stationId: localStationId, code });
+
+        try {
+          const response = await fetch("/api/checkpoint", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              raceNo: resolvedRaceNo,
+              bib: resolvedBib,
+              participantId,
+              stationId: localStationId,
+              accessCode: code,
+            }),
+          });
+          const data = await response.json();
+          if (response.ok) {
+            onSubmit({ accessCode: code, sectorNumber: enteredSector });
             setDigits(["", "", "", ""]);
-            onClose();
+            onClose(); // close EnterCode so FooterShell can render Stopwatch
           } else {
-            triggerError(`Please finish sector ${currentSector + 1} first.`);
+            triggerError(data.error || "Wrong Code. Please try again.");
           }
-        } else {
+        } catch {
           triggerError("Wrong Code. Please try again.");
         }
       }
@@ -158,7 +232,7 @@ export default function EnterCode({ isOpen, onClose, onSubmit, currentSector, er
                 color: "#000",
               }}
             >
-              ENTER ANY SECTOR CODE
+              ENTER SECTOR {currentSector} CODE
             </h3>
 
             {/* Code inputs */}
