@@ -129,7 +129,7 @@ export async function POST(req: Request) {
     const { data, error } = await supabase
       .from("genesis_participants")
       .upsert([row], { onConflict: "email_norm" })
-      .select("id")
+      .select("id, created_at, updated_at")
       .single();
 
     if (error) {
@@ -139,14 +139,14 @@ export async function POST(req: Request) {
 
     console.log("✅ Supabase success:", data);
 
-    // deduped flag removed, set to false
-    const deduped = false;
+    // dedupe detection: if updated_at !== created_at, it's an update
+    const deduped = data.updated_at !== data.created_at;
 
     return NextResponse.json(
       {
         ok: true,
-        id: data!.id,
-        deduped, // 👈 added flag
+        id: data.id,
+        deduped,
       },
       { status: 200, headers }
     );
