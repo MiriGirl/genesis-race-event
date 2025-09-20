@@ -1,3 +1,5 @@
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 
@@ -35,8 +37,11 @@ function getSubscriberHash(email: string) {
 
 export async function POST(req: Request) {
   try {
-    const body: WebhookBody = await req.json();
-    console.log("📩 Incoming Genesis webhook:", JSON.stringify(body, null, 2));
+    let body: WebhookBody | null = await req.json().catch(() => null);
+    if (!body) {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
+    console.log("📩 Parsed Genesis webhook:", JSON.stringify(body, null, 2));
 
     const participant = body.record || body.old_record;
     if (!participant?.email) {
