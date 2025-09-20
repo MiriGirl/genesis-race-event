@@ -5,6 +5,12 @@ const MAILCHIMP_API_KEY = process.env.MAILCHIMP_API_KEY!;
 const MAILCHIMP_SERVER_PREFIX = process.env.MAILCHIMP_SERVER_PREFIX!; // e.g. "us14"
 const MAILCHIMP_LIST_ID = process.env.MAILCHIMP_LIST_ID!;
 
+function withCORS(res: NextResponse) {
+  res.headers.set("Access-Control-Allow-Origin", "https://www.meuraki.com");
+  res.headers.set("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.headers.set("Access-Control-Allow-Headers", "Content-Type, x-innerdrive-secret");
+  return res;
+}
 // Define the shape of a participant record
 type Participant = {
   email: string;
