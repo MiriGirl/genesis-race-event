@@ -41,7 +41,7 @@ export default function RaceMap({ currentSector, sectors, statusType, onSectorCl
 
   return (
     <>
-      <div style={{ display: "flex", justifyContent: "center" }}>
+      <div className="race-map-container" style={{ display: "flex", justifyContent: "center" }}>
         <MapSVG style={{ width: "100%", height: "auto" }} />
       </div>
       <div style={{ textAlign: "center", marginTop: "20px", position: "relative" }}>
@@ -73,7 +73,7 @@ export default function RaceMap({ currentSector, sectors, statusType, onSectorCl
         /* Make sector groups clickable if onSectorClick is provided */
         ${onSectorClick
           ? `
-          #sector-1, #sector-2, #sector-3, #sector-4, #sector-5, #sector-6 {
+          .race-map-container #sector-1, .race-map-container #sector-2, .race-map-container #sector-3, .race-map-container #sector-4, .race-map-container #sector-5, .race-map-container #sector-6 {
             cursor: pointer;
           }
         `
@@ -81,22 +81,22 @@ export default function RaceMap({ currentSector, sectors, statusType, onSectorCl
         /* ✅ If no currentSector, everything stays idle */
         ${allIdle
           ? `
-          #track-1, #track-2, #track-3, #track-4, #track-5, #track-6 {
+          .race-map-container #track-1, .race-map-container #track-2, .race-map-container #track-3, .race-map-container #track-4, .race-map-container #track-5, .race-map-container #track-6 {
             stroke: rgba(218, 218, 218, 0.15) !important; /* #dadada at 15% */
             stroke-width: 12;
           }
             
 
           /* Sector circles & labels idle */
-      #number2, #number3, #number4, #number5, #number6 {
+      .race-map-container #number2, .race-map-container #number3, .race-map-container #number4, .race-map-container #number5, .race-map-container #number6 {
             fill: #FFFFFF !important; /* white circles */
           }
-          #number1 {
+          .race-map-container #number1 {
             fill: #7000E0 !important;
             animation: pulseGlow 2s infinite ease-in-out;
             filter: drop-shadow(0 0 4px #A349EF);
           }
-          #number-1 text, #number-2 text, #number-3 text, #number-4 text, #number-5 text, #number-6 text {
+          .race-map-container #number-1 text, .race-map-container #number-2 text, .race-map-container #number-3 text, .race-map-container #number-4 text, .race-map-container #number-5 text, .race-map-container #number-6 text {
             fill: #7000E0 !important; /* purple labels */
           }
         `
@@ -107,16 +107,16 @@ export default function RaceMap({ currentSector, sectors, statusType, onSectorCl
           ? Array.from({ length: currentSector - 1 }, (_, i) => {
               const sector = i + 1;
               return `
-                #track-${sector} {
+                .race-map-container #track-${sector} {
                   stroke: #7000E0 !important;
                   stroke-width: 12;
                   stroke-linecap: round;
                   filter: drop-shadow(0px 0px 4px #7000E0);
                 }
-                #number${sector} {
+                .race-map-container #number${sector} {
                   fill: #7000E0 !important;
                 }
-                #number-${sector} text {
+                .race-map-container #number-${sector} text {
                   fill: #ffffff !important;
                 }
               `;
@@ -127,7 +127,7 @@ export default function RaceMap({ currentSector, sectors, statusType, onSectorCl
         ${
           currentSector && statusType === "stopwatch" && !raceNotStarted
             ? `
-          #track-${currentSector} {
+          .race-map-container #track-${currentSector} {
             stroke: #A349EF !important;
             stroke-width: 12;
             stroke-linecap: round;
@@ -144,7 +144,7 @@ export default function RaceMap({ currentSector, sectors, statusType, onSectorCl
         ${
           currentSector
             ? `
-          #sector-${currentSector} {
+          .race-map-container #sector-${currentSector} {
             animation: pulseGlow 1.4s infinite ease-in-out;
             transform-box: fill-box;
             -webkit-transform-box: fill-box; /* Safari/WebKit */
@@ -152,10 +152,10 @@ export default function RaceMap({ currentSector, sectors, statusType, onSectorCl
             -webkit-transform-origin: 50% 50%;
             will-change: transform, opacity, filter;
           }
-          #sector-${currentSector} rect {
+          .race-map-container #sector-${currentSector} rect {
             fill: #A349EF !important;
           }
-          #sector-${currentSector} text {
+          .race-map-container #sector-${currentSector} text {
             fill: #ffffff !important;
           }
         `
@@ -168,15 +168,15 @@ export default function RaceMap({ currentSector, sectors, statusType, onSectorCl
             ? Array.from({ length: 6 - currentSector }, (_, i) => {
                 const sector = currentSector + i + 1;
                 return `
-                  #track-${sector} {
+                  .race-map-container #track-${sector} {
                     stroke: #dadada !important;
                     stroke-opacity: 0.15;
                     stroke-width: 12;
                   }
-                  #number${sector} {
+                  .race-map-container #number${sector} {
                    fill: #FFFFFF !important;
                   }
-                  #number-${sector} text {
+                  .race-map-container #number-${sector} text {
                     fill: #7000E0 !important;
                   }
                 `;
@@ -190,22 +190,22 @@ export default function RaceMap({ currentSector, sectors, statusType, onSectorCl
               .map(({ id, status }) => {
                 if (status === "completed") {
                   return `
-                    #track-${id} {
+                    .race-map-container #track-${id} {
                       stroke: #7000E0 !important;
                       stroke-width: 12;
                       stroke-linecap: round;
                       filter: drop-shadow(0px 0px 4px #7000E0);
                     }
-                    #number${id} {
+                    .race-map-container #number${id} {
                       fill: #7000E0 !important;
                     }
-                    #number-${id} text {
+                    .race-map-container #number-${id} text {
                       fill: #ffffff !important;
                     }
                   `;
                 } else if (status === "active") {
                   return `
-                    #track-${id} {
+                    .race-map-container #track-${id} {
                       stroke: #A349EF !important;
                       stroke-width: 12;
                       stroke-linecap: round;
@@ -214,7 +214,7 @@ export default function RaceMap({ currentSector, sectors, statusType, onSectorCl
                       animation: pulseGradientGlow 2s infinite ease-in-out, dashForward 12s linear infinite;
                       opacity: 1 !important;
                     }
-                    #sector-${id} {
+                    .race-map-container #sector-${id} {
                       animation: pulseGlow 1.4s infinite ease-in-out;
                       transform-box: fill-box;
                       -webkit-transform-box: fill-box;
@@ -222,24 +222,24 @@ export default function RaceMap({ currentSector, sectors, statusType, onSectorCl
                       -webkit-transform-origin: 50% 50%;
                       will-change: transform, opacity, filter;
                     }
-                    #sector-${id} rect {
+                    .race-map-container #sector-${id} rect {
                       fill: #A349EF !important;
                     }
-                    #sector-${id} text {
+                    .race-map-container #sector-${id} text {
                       fill: #ffffff !important;
                     }
                   `;
                 } else if (status === "idle") {
                   return `
-                    #track-${id} {
+                    .race-map-container #track-${id} {
                       stroke: #dadada !important;
                       stroke-opacity: 0.15;
                       stroke-width: 12;
                     }
-                    #number${id} {
+                    .race-map-container #number${id} {
                       fill: #FFFFFF !important;
                     }
-                    #number-${id} text {
+                    .race-map-container #number-${id} text {
                       fill: #7000E0 !important;
                     }
                   `;
