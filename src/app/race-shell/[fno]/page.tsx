@@ -484,9 +484,10 @@ export default function RaceShell() {
                     }}
                   >
                     <RaceMap
-                      currentSector={displayedSector}
-                      statusType={raceStatus?.type}
-                      onSectorClick={(sectorId) => setSelectedSector(sectorId)}
+                      key={`${fno}-${raceStatus?.type}-${displayedSector}`} // ✅ ensures animations restart on change
+  currentSector={displayedSector}
+  statusType={raceStatus?.type}
+  onSectorClick={(sectorId) => setSelectedSector(sectorId)}
                     />
                   </div>
                 )}
