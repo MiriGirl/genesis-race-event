@@ -1,9 +1,17 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 
-export default function RacePageClient({ fno }: { fno: string }) {
+export default function RacePageClient() {
   const router = useRouter();
+  const params = useParams();
+  // Ensure fno is always a string
+  const rawFno = params?.fno;
+  const fno = Array.isArray(rawFno) ? rawFno[0] : (rawFno || "");
+
+  // Derive raceNo and bib
+  const raceNo = fno.toUpperCase();
+  const bib = raceNo.startsWith("F") ? raceNo.slice(1) : raceNo;
 
   const [countdown, setCountdown] = useState({
     days: 0,
@@ -12,25 +20,84 @@ export default function RacePageClient({ fno }: { fno: string }) {
     seconds: 0,
   });
   const [raceActive, setRaceActive] = useState(false);
+  const [raceStatus, setRaceStatus] = useState<"not_started" | "in_progress" | "finished" | null>(null);
+  const [showStartButton, setShowStartButton] = useState(false);
+
+  const FORCE_EVENT_MODE = false;
 
   useEffect(() => {
     async function checkRace() {
       try {
-        const res = await fetch(`/api/check-race?fno=${fno}`);
+        const res = await fetch(`/api/race-status?raceNo=${raceNo}&bib=${bib}`);
         const data = await res.json();
 
-        if (!data.exists) {
-          // ❌ redirect to /error if race number not found
-          router.replace("/error");
+        console.log("API response:", data);
+        if (raceActive) {
+          console.log("✅ Inside event hours (10am–10pm SGT)");
+          // Inside event hours
+          if (data?.type === "enter") {
+            setShowStartButton(true);
+            // UI log for START RACE button
+            console.log("🟢 UI: Showing START RACE button");
+          } else if (data?.type === "finished" || data?.status === "finished") {
+            // UI log for finished race holding state
+            console.log("🏁 UI: Finished race (holding state)");
+          } else if (data?.status === "in_progress") {
+            // UI log for redirect
+            console.log("🚦 UI: Redirecting to race-shell");
+            router.replace(`/race-shell/${raceNo}`);
+          } else {
+            // UI log for fallback holding state
+            console.log("ℹ️ UI: Holding state (no button/redirect)");
+          }
+        } else {
+          console.log("⏰ Outside event hours (before 10am or after 10pm SGT)");
+          // UI log for outside event hours
+          console.log("🟣 UI: Countdown + holding message");
+          setShowStartButton(false);
+        }
+
+        console.log("API race status:", data?.status || data?.type);
+
+        if (data?.status) {
+          // Preferred if provided
+          console.log("Race started?", data.status !== "not_started");
+          setRaceStatus(data.status);
+          if (data.status === "in_progress") {
+            if (raceActive) {
+              console.log("Race in progress and raceActive is true → redirecting");
+              router.replace(`/race-shell/${raceNo}`);
+            } else {
+              console.log("Race in progress but raceActive is false → showing holding page");
+            }
+          }
+        } else if (data?.type) {
+          // Fallback mapping if API only provides `type`
+          const mapped =
+            data.type === "enter"
+              ? "not_started"
+              : data.type === "finished"
+              ? "finished"
+              : data.type;
+          console.log("Race started?", mapped !== "not_started");
+          setRaceStatus(mapped as "not_started" | "in_progress" | "finished");
+          if (mapped === "in_progress" && raceActive) {
+            console.log("Race in progress (from type) and raceActive is true → redirecting");
+            router.replace(`/race-shell/${raceNo}`);
+          }
+        } else {
+          setRaceStatus(null);
         }
       } catch (err) {
         console.error("Race check failed", err);
-        router.replace("/error");
+        setRaceStatus(null);
       }
     }
 
-    checkRace();
-  }, [fno, router]);
+    if (fno) {
+      checkRace();
+    }
+  }, [fno, raceNo, bib, router, raceActive]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -60,15 +127,6 @@ export default function RacePageClient({ fno }: { fno: string }) {
       // Convert SGT wall-clock times to UTC epoch ms by subtracting 8 hours
       const openMs  = Date.UTC(y, m - 1, d, 10 - 8, 0, 0);  // 10:00 SGT => 02:00 UTC
       const closeMs = Date.UTC(y, m - 1, d, 22 - 8, 0, 0);  // 22:00 SGT => 14:00 UTC
-
-      // Helpful diagnostics while we stabilise
-      if (process.env.NODE_ENV !== 'production') {
-        console.log(
-          `Device: ${new Date(nowMs).toString()} | ` +
-            `SGT parts -> ${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')} ${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')} | ` +
-            `open(10:00 SGT): ${new Date(openMs).toISOString()} | close(22:00 SGT): ${new Date(closeMs).toISOString()}`
-        );
-      }
 
       if (nowMs >= openMs && nowMs <= closeMs) {
         setRaceActive(true);
@@ -212,7 +270,7 @@ export default function RacePageClient({ fno }: { fno: string }) {
                       margin: -18, // 🔑 remove spacing
                     }}
                   >
-                    {fno}
+                    {raceNo}
                   </h1>
                 </div>
               </div>
@@ -244,16 +302,7 @@ export default function RacePageClient({ fno }: { fno: string }) {
             </div>
           </div>
 
-          {raceActive ? (
-            <div className="mt-8">
-              <button
-                className="bg-[#A700D1] hover:bg-[#8a009f] text-white font-bold py-3 px-10 rounded-lg text-xl transition-colors"
-                onClick={() => router.push(`/race-shell/${fno}`)}
-              >
-                START RACE
-              </button>
-            </div>
-          ) : (
+          {!raceActive && (
             <>
               {/* Countdown Timer UI */}
               <div
@@ -315,21 +364,55 @@ export default function RacePageClient({ fno }: { fno: string }) {
               </div>
 
               {/* Caption Text */}
-              <p
-                className="text-center uppercase mt-2 max-w-[280px]"
-                style={{
-                  fontFamily: "'Poppins', sans-serif",
-                  fontWeight: 400,
-                  fontSize: 11,
-                  lineHeight: "134%",
-                  letterSpacing: 0.4,
-                }}
-              >
-                Your race link will be active on event days between 10 am to 10pm.
-                See you soon!
-              </p>
+              {raceStatus === "not_started" && (
+                <p
+                  className="text-center uppercase mt-2 max-w-[280px]"
+                  style={{
+                    fontFamily: "'Poppins', sans-serif",
+                    fontWeight: 400,
+                    fontSize: 11,
+                    lineHeight: "134%",
+                    letterSpacing: 0.4,
+                  }}
+                >
+                  Your race link will be active on event days between 10 am to 10pm.
+                  See you soon!
+                </p>
+              )}
             </>
           )}
+
+          {/* START RACE button only shown when showStartButton is true */}
+          {showStartButton ? (
+            <div className="mt-4">
+              <button
+                onClick={() => router.push(`/race-shell/${raceNo}`)}
+                className="font-dragracing"
+                style={{
+                  background: "rgba(128,0,255,0.4)",
+                  color: "#FFFFFF",
+                  fontSize: "32px",
+                  fontWeight: 400,
+                  letterSpacing: "0.02em",
+                  padding: "20px 40px",
+                  borderRadius: "20px",
+                  border: "none",
+                  cursor: "pointer",
+                  width: "100%",
+                  maxWidth: "336px",
+                  height: "87px",
+                 
+                }}
+              >
+                START RACE
+              </button>
+            </div>
+          ) : raceActive ? null : null}
+
+          {raceStatus === "finished" ? (
+            // Placeholder for finished race state
+            null
+          ) : null}
         </div>
       </div>
     </div>

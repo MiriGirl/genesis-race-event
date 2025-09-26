@@ -10,10 +10,6 @@ interface RaceMapProps {
 }
 
 export default function RaceMap({ currentSector, sectors, statusType, onSectorClick }: RaceMapProps) {
-  useEffect(() => {
-    console.log("RaceMap props - currentSector:", currentSector, "statusType:", statusType);
-  }, [currentSector, statusType]);
-
   const raceNotStarted = statusType === "enter" && currentSector === 1;
   const allIdle = currentSector === null || currentSector === 0;
 
@@ -37,14 +33,12 @@ export default function RaceMap({ currentSector, sectors, statusType, onSectorCl
     };
   }, [onSectorClick]);
 
-  console.log("Rendering RaceMap with props:", { currentSector, sectors, statusType });
-
   return (
     <>
-      <div className="race-map-container" style={{ display: "flex", justifyContent: "center" }}>
+      <div style={{ display: "flex", justifyContent: "center" }}>
         <MapSVG style={{ width: "100%", height: "auto" }} />
       </div>
-      <div style={{ textAlign: "center", marginTop: "20px", position: "relative" }}>
+      <div style={{ textAlign: "center", marginTop: "12px", position: "relative" }}>
         <div
           style={{
             height: "40px",
@@ -63,7 +57,8 @@ export default function RaceMap({ currentSector, sectors, statusType, onSectorCl
             fontWeight: 600,
             fontSize: "14px",
             letterSpacing: "0.05em",
-            marginTop: "-40px", // keep text over blur
+            marginTop: "-50px",
+            marginBottom: 40, // keep text over blur
           }}
         >
           SELECT A SECTOR TO LEARN MORE
@@ -73,7 +68,7 @@ export default function RaceMap({ currentSector, sectors, statusType, onSectorCl
         /* Make sector groups clickable if onSectorClick is provided */
         ${onSectorClick
           ? `
-          :global(.race-map-container #sector-1), :global(.race-map-container #sector-2), :global(.race-map-container #sector-3), :global(.race-map-container #sector-4), :global(.race-map-container #sector-5), :global(.race-map-container #sector-6) {
+          #sector-1, #sector-2, #sector-3, #sector-4, #sector-5, #sector-6 {
             cursor: pointer;
           }
         `
@@ -81,22 +76,22 @@ export default function RaceMap({ currentSector, sectors, statusType, onSectorCl
         /* ✅ If no currentSector, everything stays idle */
         ${allIdle
           ? `
-          :global(.race-map-container #track-1), :global(.race-map-container #track-2), :global(.race-map-container #track-3), :global(.race-map-container #track-4), :global(.race-map-container #track-5), :global(.race-map-container #track-6) {
+          #track-1, #track-2, #track-3, #track-4, #track-5, #track-6 {
             stroke: rgba(218, 218, 218, 0.15) !important; /* #dadada at 15% */
             stroke-width: 12;
           }
             
 
           /* Sector circles & labels idle */
-      :global(.race-map-container #number2), :global(.race-map-container #number3), :global(.race-map-container #number4), :global(.race-map-container #number5), :global(.race-map-container #number6) {
+      #number2, #number3, #number4, #number5, #number6 {
             fill: #FFFFFF !important; /* white circles */
           }
-          :global(.race-map-container #number1) {
+          #number1 {
             fill: #7000E0 !important;
             animation: pulseGlow 2s infinite ease-in-out;
             filter: drop-shadow(0 0 4px #A349EF);
           }
-          :global(.race-map-container #number1 text), :global(.race-map-container #number2 text), :global(.race-map-container #number3 text), :global(.race-map-container #number4 text), :global(.race-map-container #number5 text), :global(.race-map-container #number6 text) {
+          #number-1 text, #number-2 text, #number-3 text, #number-4 text, #number-5 text, #number-6 text {
             fill: #7000E0 !important; /* purple labels */
           }
         `
@@ -107,38 +102,33 @@ export default function RaceMap({ currentSector, sectors, statusType, onSectorCl
           ? Array.from({ length: currentSector - 1 }, (_, i) => {
               const sector = i + 1;
               return `
-                :global(.race-map-container #track-${sector}) {
+                #track-${sector} {
                   stroke: #7000E0 !important;
                   stroke-width: 12;
                   stroke-linecap: round;
                   filter: drop-shadow(0px 0px 4px #7000E0);
                 }
-                :global(.race-map-container #number${sector}) {
+                #number${sector} {
                   fill: #7000E0 !important;
                 }
-                :global(.race-map-container #number${sector} text) {
+                #number-${sector} text {
                   fill: #ffffff !important;
                 }
               `;
-            }).filter(Boolean).join("\n")
+            }).join("\n")
           : ""}
 
         /* ✅ Active sector track highlight (only if statusType === "stopwatch" and !raceNotStarted) */
         ${
           currentSector && statusType === "stopwatch" && !raceNotStarted
             ? `
-          :global(.race-map-container #track-${currentSector}) {
+          #track-${currentSector} {
             stroke: #A349EF !important;
             stroke-width: 12;
             stroke-linecap: round;
             stroke-dasharray: 1200;
-            stroke-dashoffset: 1200 !important;
-
-            animation-name: pulseGradientGlow, dashForward;
-            animation-duration: 2s, 12s;
-            animation-iteration-count: infinite, infinite;
-            animation-timing-function: ease-in-out, linear;
-
+            stroke-dashoffset: 1200;
+            animation: pulseGradientGlow 2s infinite ease-in-out, dashForward 12s linear infinite;
             opacity: 1 !important;
           }
         `
@@ -149,22 +139,18 @@ export default function RaceMap({ currentSector, sectors, statusType, onSectorCl
         ${
           currentSector
             ? `
-          :global(.race-map-container #sector-${currentSector}) {
-            animation-name: pulseGlow;
-            animation-duration: 1.4s;
-            animation-iteration-count: infinite;
-            animation-timing-function: ease-in-out;
-
+          #sector-${currentSector} {
+            animation: pulseGlow 1.4s infinite ease-in-out;
             transform-box: fill-box;
             -webkit-transform-box: fill-box; /* Safari/WebKit */
             transform-origin: 50% 50%;
             -webkit-transform-origin: 50% 50%;
             will-change: transform, opacity, filter;
           }
-          :global(.race-map-container #sector-${currentSector} rect) {
+          #sector-${currentSector} rect {
             fill: #A349EF !important;
           }
-          :global(.race-map-container #sector-${currentSector} text) {
+          #sector-${currentSector} text {
             fill: #ffffff !important;
           }
         `
@@ -177,19 +163,19 @@ export default function RaceMap({ currentSector, sectors, statusType, onSectorCl
             ? Array.from({ length: 6 - currentSector }, (_, i) => {
                 const sector = currentSector + i + 1;
                 return `
-                  :global(.race-map-container #track-${sector}) {
+                  #track-${sector} {
                     stroke: #dadada !important;
                     stroke-opacity: 0.15;
                     stroke-width: 12;
                   }
-                  :global(.race-map-container #number${sector}) {
+                  #number${sector} {
                    fill: #FFFFFF !important;
                   }
-                  :global(.race-map-container #number${sector} text) {
+                  #number-${sector} text {
                     fill: #7000E0 !important;
                   }
                 `;
-              }).filter(Boolean).join("\n")
+              }).join("\n")
             : ""
         }
 
@@ -199,69 +185,62 @@ export default function RaceMap({ currentSector, sectors, statusType, onSectorCl
               .map(({ id, status }) => {
                 if (status === "completed") {
                   return `
-                    :global(.race-map-container #track-${id}) {
+                    #track-${id} {
                       stroke: #7000E0 !important;
                       stroke-width: 12;
                       stroke-linecap: round;
                       filter: drop-shadow(0px 0px 4px #7000E0);
                     }
-                    :global(.race-map-container #number${id}) {
+                    #number${id} {
                       fill: #7000E0 !important;
                     }
-                    :global(.race-map-container #number${id} text) {
+                    #number-${id} text {
                       fill: #ffffff !important;
                     }
                   `;
                 } else if (status === "active") {
                   return `
-                    :global(.race-map-container #track-${id}) {
+                    #track-${id} {
                       stroke: #A349EF !important;
                       stroke-width: 12;
                       stroke-linecap: round;
                       stroke-dasharray: 1200;
                       stroke-dashoffset: 1200;
-                      animation-name: pulseGradientGlow, dashForward;
-                      animation-duration: 2s, 12s;
-                      animation-iteration-count: infinite, infinite;
-                      animation-timing-function: ease-in-out, linear;
+                      animation: pulseGradientGlow 2s infinite ease-in-out, dashForward 12s linear infinite;
                       opacity: 1 !important;
                     }
-                    :global(.race-map-container #sector-${id}) {
-                      animation-name: pulseGlow;
-                      animation-duration: 1.4s;
-                      animation-iteration-count: infinite;
-                      animation-timing-function: ease-in-out;
-
+                    #sector-${id} {
+                      animation: pulseGlow 1.4s infinite ease-in-out;
                       transform-box: fill-box;
                       -webkit-transform-box: fill-box;
                       transform-origin: 50% 50%;
                       -webkit-transform-origin: 50% 50%;
                       will-change: transform, opacity, filter;
                     }
-                    :global(.race-map-container #sector-${id} rect) {
+                    #sector-${id} rect {
                       fill: #A349EF !important;
                     }
-                    :global(.race-map-container #sector-${id} text) {
+                    #sector-${id} text {
                       fill: #ffffff !important;
                     }
                   `;
                 } else if (status === "idle") {
                   return `
-                    :global(.race-map-container #track-${id}) {
+                    #track-${id} {
                       stroke: #dadada !important;
                       stroke-opacity: 0.15;
                       stroke-width: 12;
                     }
-                    :global(.race-map-container #number${id}) {
+                    #number${id} {
                       fill: #FFFFFF !important;
                     }
-                    :global(.race-map-container #number${id} text) {
+                    #number-${id} text {
                       fill: #7000E0 !important;
                     }
                   `;
                 }
                 return "";
-              }).filter(Boolean)
+              })
               .join("\n")
           : ""}
 

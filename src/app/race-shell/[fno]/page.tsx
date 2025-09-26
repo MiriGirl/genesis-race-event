@@ -468,7 +468,7 @@ export default function RaceShell() {
                   width: "100%",
                   display: "flex",
                   justifyContent: "center",
-                  marginTop: "5%",
+                  marginTop: -10,
                 }}
               >
                 {raceStatus?.type === "finished" ? (
