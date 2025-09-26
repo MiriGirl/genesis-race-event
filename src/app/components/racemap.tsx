@@ -266,18 +266,18 @@ export default function RaceMap({ currentSector, sectors, statusType, onSectorCl
           : ""}
 
         /* 🔮 Pulse glow for active circle */
-        @keyframes pulseGlow {
+        :global(@keyframes pulseGlow) {
           0%   { transform: scale(1);   opacity: 1;    filter: drop-shadow(0 0 3px #A349EF); }
           50%  { transform: scale(1.5); opacity: 0.85; filter: drop-shadow(0 0 14px #A349EF); }
           100% { transform: scale(1);   opacity: 1;    filter: drop-shadow(0 0 3px #A349EF); }
         }
 
-        @keyframes dashForward {
+        :global(@keyframes dashForward) {
           from { stroke-dashoffset: 1200; }
           to { stroke-dashoffset: 0; }
         }
 
-        @keyframes pulseGradientGlow {
+        :global(@keyframes pulseGradientGlow) {
           0%   { filter: drop-shadow(0 0 6px #420BD9); }
           50%  { filter: drop-shadow(0 0 16px #D73AFF); }
           100% { filter: drop-shadow(0 0 6px #420BD9); }
