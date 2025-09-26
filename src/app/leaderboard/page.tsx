@@ -5,6 +5,7 @@ import Image from "next/image";
 import { nationalities } from "../../data/nationalities";
 import { createClient } from "@supabase/supabase-js";
 import { motion, AnimatePresence } from "framer-motion";
+import { easeOut } from "framer-motion";
 
 const flagFor = (country?: string) =>
   (country && (nationalities as Record<string, string>)[country]) || "🏳️";
@@ -262,16 +263,16 @@ export default function Leaderboard({
                     let animate, transition, onAnimationComplete;
                     if (idx === 0) {
                       animate = { opacity: 1, y: 0, backgroundColor: "rgba(168,85,247,0.8)" };
-                      transition = { duration: 1.2, ease: "easeOut" };
+                      transition = { duration: 1.2, ease: easeOut };
                       onAnimationComplete = undefined;
                     } else if (isUpdated) {
                       animate = { opacity: 1, y: 0, backgroundColor: "rgba(21,21,21,1)" };
-                      transition = { duration: 1.5, ease: "easeOut" };
+                      transition = { duration: 1.5, ease: easeOut };
                       initial = { opacity: 0, y: -30, backgroundColor: "rgba(168,85,247,0.8)" };
                       onAnimationComplete = undefined;
                     } else {
                       animate = { opacity: 1, y: 0, backgroundColor: "rgba(21,21,21,1)" };
-                      transition = { duration: 1.2, ease: "easeOut" };
+                      transition = { duration: 1.2, ease: easeOut };
                       onAnimationComplete = undefined;
                     }
                     return (
@@ -374,16 +375,16 @@ export default function Leaderboard({
                       let animate, transition, onAnimationComplete;
                       if (idx === 0) {
                         animate = { opacity: 1, y: 0, backgroundColor: "rgba(168,85,247,0.8)" };
-                        transition = { duration: 1.2, ease: "easeOut" };
+                        transition = { duration: 1.2, ease: easeOut };
                         onAnimationComplete = undefined;
                       } else if (isUpdated) {
                         animate = { opacity: 1, y: 0, backgroundColor: "rgba(21,21,21,1)" };
-                        transition = { duration: 1.5, ease: "easeOut" };
+                        transition = { duration: 1.5, ease: easeOut };
                         initial = { opacity: 0, y: -30, backgroundColor: "rgba(168,85,247,0.8)" };
                         onAnimationComplete = undefined;
                       } else {
                         animate = { opacity: 1, y: 0, backgroundColor: "rgba(21,21,21,1)" };
-                        transition = { duration: 1.2, ease: "easeOut" };
+                        transition = { duration: 1.2, ease: easeOut };
                         onAnimationComplete = undefined;
                       }
                       return (
