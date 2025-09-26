@@ -125,12 +125,12 @@ export default function Leaderboard({
       }}
     >
       {/* Background */}
-      <div style={{ position: "absolute", inset: 0, zIndex: 1, height: "auto", width: "100%",  }}>
+      <div style={{ position: "absolute", inset: 0, zIndex: 1, height: "auto", width: "100%" }}>
         <Image
           src="/bg/leaderboard-image.png"
           alt="Leaderboard background"
           fill
-          style={{ objectFit: "cover", pointerEvents: "none", backgroundRepeat: "repeat-y", }}
+          style={{ objectFit: "cover", pointerEvents: "none", backgroundRepeat: "repeat-y" }}
         />
         <div
           style={{
@@ -138,7 +138,8 @@ export default function Leaderboard({
             inset: 0,
             height: "100%",
             width: "100%",
- 
+            pointerEvents: "none",
+            background: "transparent",
           }}
         />
       </div>
@@ -336,6 +337,14 @@ export default function Leaderboard({
                               padding: "7px 12px",
                               borderRadius: "12px",
                               backgroundColor: isCurrent ? "rgba(168,85,247,0.8)" : "#1A1A1A",
+                              ...(idx < 3
+                                ? {
+                                    boxShadow: "0 0 15px 5px rgba(168,85,247,0.8)",
+                                    animation: "pulseGlow 2s infinite",
+                                    position: "relative",
+                                    zIndex: 5,
+                                  }
+                                : {}),
                             }}
                           >
                             <span style={{ textAlign: "center", fontWeight: "bold" }}>
