@@ -132,8 +132,13 @@ export default function RaceMap({ currentSector, sectors, statusType, onSectorCl
             stroke-width: 12;
             stroke-linecap: round;
             stroke-dasharray: 1200;
-            stroke-dashoffset: 1200;
-            animation: pulseGradientGlow 2s infinite ease-in-out, dashForward 12s linear infinite;
+            stroke-dashoffset: 1200 !important;
+
+            animation-name: pulseGradientGlow, dashForward;
+            animation-duration: 2s, 12s;
+            animation-iteration-count: infinite, infinite;
+            animation-timing-function: ease-in-out, linear;
+
             opacity: 1 !important;
           }
         `
@@ -145,7 +150,11 @@ export default function RaceMap({ currentSector, sectors, statusType, onSectorCl
           currentSector
             ? `
           .race-map-container #sector-${currentSector} {
-            animation: pulseGlow 1.4s infinite ease-in-out;
+            animation-name: pulseGlow;
+            animation-duration: 1.4s;
+            animation-iteration-count: infinite;
+            animation-timing-function: ease-in-out;
+
             transform-box: fill-box;
             -webkit-transform-box: fill-box; /* Safari/WebKit */
             transform-origin: 50% 50%;
@@ -211,11 +220,18 @@ export default function RaceMap({ currentSector, sectors, statusType, onSectorCl
                       stroke-linecap: round;
                       stroke-dasharray: 1200;
                       stroke-dashoffset: 1200;
-                      animation: pulseGradientGlow 2s infinite ease-in-out, dashForward 12s linear infinite;
+                      animation-name: pulseGradientGlow, dashForward;
+                      animation-duration: 2s, 12s;
+                      animation-iteration-count: infinite, infinite;
+                      animation-timing-function: ease-in-out, linear;
                       opacity: 1 !important;
                     }
                     .race-map-container #sector-${id} {
-                      animation: pulseGlow 1.4s infinite ease-in-out;
+                      animation-name: pulseGlow;
+                      animation-duration: 1.4s;
+                      animation-iteration-count: infinite;
+                      animation-timing-function: ease-in-out;
+
                       transform-box: fill-box;
                       -webkit-transform-box: fill-box;
                       transform-origin: 50% 50%;
