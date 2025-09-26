@@ -359,7 +359,7 @@ export default function EnterCode({ isOpen, onClose, onSubmit, currentSector, er
                 >
                   1
                 </span>
-                No need to race in order.
+                You must complete all sectors in order.
               </li>
               <li style={{ display: "flex", fontSize: "15px", fontWeight: 300, marginBottom: "12px", color: "#000" }}>
                 <span
@@ -379,7 +379,7 @@ export default function EnterCode({ isOpen, onClose, onSubmit, currentSector, er
                 >
                   2
                 </span>
-                Pick any open sector, grab the code from a pit crew member, and race to complete it at top speed to earn your badge.
+               Grab the code from a pit crew member, or on the stand next to the sector. Race to complete it at top speed to earn your badge and earn the MVP sector badge.
               </li>
               <li style={{ display: "flex", fontSize: "15px", fontWeight: 300, color: "#000" }}>
                 <span
