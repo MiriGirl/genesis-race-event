@@ -10,6 +10,10 @@ interface RaceMapProps {
 }
 
 export default function RaceMap({ currentSector, sectors, statusType, onSectorClick }: RaceMapProps) {
+  useEffect(() => {
+    console.log("RaceMap props - currentSector:", currentSector, "statusType:", statusType);
+  }, [currentSector, statusType]);
+
   const raceNotStarted = statusType === "enter" && currentSector === 1;
   const allIdle = currentSector === null || currentSector === 0;
 
@@ -32,6 +36,8 @@ export default function RaceMap({ currentSector, sectors, statusType, onSectorCl
       handlers.forEach(({ el, fn }) => el.removeEventListener("click", fn));
     };
   }, [onSectorClick]);
+
+  console.log("Rendering RaceMap with props:", { currentSector, sectors, statusType });
 
   return (
     <>
