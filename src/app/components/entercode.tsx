@@ -41,7 +41,7 @@ export default function EnterCode({ isOpen, onClose, onSubmit, currentSector, er
   // ✅ static codes
   const validCodes: Record<string, number> = {
     "71P4": 1,
-    "98R2": 2,
+    "9R82": 2,
     "6F35": 3,
     "4F79": 4,
     "3C68": 5,
@@ -95,7 +95,7 @@ export default function EnterCode({ isOpen, onClose, onSubmit, currentSector, er
 
       // auto verify on last digit
       if (index === digits.length - 1 && value) {
-        const code = newDigits.join("");
+        const code = newDigits.join("").toUpperCase();
         const expectedSector = currentSector;
         const enteredSector = validCodes[code];
 
