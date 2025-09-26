@@ -7,6 +7,12 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Sector 4: Fuel Station — MEURAKI INNERDRIVE™</title>
   <style>
+    @font-face {
+      font-family: 'DragRacing';
+      src: url('/fonts/DragRacing.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+    }
     :root{
       --bg: #0b0615;
       --bg2: #120a23;
@@ -25,8 +31,8 @@
       font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans";
       color: var(--text);
       background:
-        linear-gradient(180deg, rgba(10,6,20,.5), rgba(10,6,20,.75)),  /* contrast mask */
-        url('bg-hero.jpg') center / cover fixed no-repeat,
+        linear-gradient(180deg, rgba(10,6,20,.2), rgba(10,6,20,.4)),  /* contrast mask */
+        url('/bg/bg-form.jpg') center / cover fixed no-repeat,
         radial-gradient(900px 600px at 25% -10%, rgba(139,92,246,.18), transparent 45%),
         radial-gradient(900px 600px at 100% 0%, rgba(236,72,153,.18), transparent 50%),
         linear-gradient(180deg, var(--bg), var(--bg2));
@@ -53,23 +59,40 @@
       border-radius: var(--radius);
       padding: clamp(20px, 3vw, 32px);
       box-shadow: var(--shadow);
+      position: relative;
+      overflow: visible;
     }
     header{
-      display:flex; align-items:center; justify-content:space-between; gap:12px;
-      margin-bottom: 14px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:12px;
+      margin-bottom:14px;
     }
     .brand{
-      display:flex; align-items:center; gap:12px;
-      font-weight:800; letter-spacing:.2px;
-      font-size: clamp(18px, 2.4vw, 22px);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      font-family: 'DragRacing', ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans";
+      font-weight:600;
+      letter-spacing:.2px;
+      font-size: clamp(35px, 2.4vw, 22px);
       line-height:1;
+      width:100%;
+      text-align:center;
+    
     }
     .brand .logo{
-      width:34px; height:34px; object-fit:cover;
-      border-radius:8px;
-      box-shadow: 0 0 0 1px rgba(255,255,255,.5), 0 0 16px rgba(139,92,246,.55);
-      background:#fff;
+      width:180px;
+      height:180px;
+      object-fit:contain;
+      border-radius:0;
+      background:transparent;
       flex:0 0 auto;
+      box-shadow:none;
+      margin-top:-70px; /* shift it above the card */
     }
     .restart{
       appearance:none; border:0; border-radius:12px;
@@ -78,8 +101,8 @@
     }
     .progress{ margin: 6px 0 20px; height: 8px; background: rgba(255,255,255,.10); border-radius: 999px; overflow:hidden; }
     .progress > div{ height:100%; width:0%; background: linear-gradient(90deg, var(--brand), var(--brand-2)); transition: width .35s ease; }
-    h1{ font-size: clamp(22px, 3.8vw, 30px); margin: 8px 0 10px; line-height:1.25; }
-    .question{ color: #f3f4f6; font-size: clamp(18px, 2.6vw, 20px); margin: 10px 0 18px; }
+    h1{     text-align: center; font-size: clamp(22px, 3.8vw, 30px); margin: 28px 0 10px; line-height:1.25; }
+    .question{ color: #f3f4f6; font-size: clamp(18px, 2.6vw, 20px); margin: 20px 0 28px; text-align: center; }
     .options{display:grid; gap:12px}
     .opt{
       display:flex; align-items:center; gap:12px;
@@ -101,29 +124,93 @@
     .fact .badge svg{width:18px;height:18px;flex:0 0 auto}
     .fact a{ color: #F0ABFC; text-decoration: underline }
     .actions{ display:flex; gap:12px; margin-top:16px }
-    .btn{ appearance:none; border:0; border-radius:14px; padding: 14px 18px; font-weight:900; letter-spacing:.2px; background: linear-gradient(90deg, var(--brand), var(--brand-2)); color:#0b0615; cursor:pointer; min-width: 140px; }
+    .btn{ width: 100%; font-size: 18px; appearance:none; border:0; border-radius:14px; margin-top:10px; padding: 24px 18px; font-weight:900; letter-spacing:.2px; background: linear-gradient(90deg, var(--brand), var(--brand-2)); color:#0b0615; cursor:pointer; min-width: 140px; }
     .btn[disabled]{ opacity:.5; cursor:not-allowed }
     .ghost{ background: rgba(255,255,255,.08); color:#e5e7eb }
-    .center{ text-align:center }
+    .center{ padding-left: 80px; padding-right: 80px; text-align:center }
     .muted{ color: var(--muted) }
     .end{ text-align:center; padding: 10px 0 0; }
     .countdown{ margin: 14px auto 0; height:10px; width: 60%; background: rgba(255,255,255,.10); border-radius:999px; overflow:hidden; }
     .countdown > div{ height:100%; width:0%; background: linear-gradient(90deg, var(--brand), var(--brand-2)); transition: width 10s linear; }
     @media (prefers-reduced-motion: reduce){ .progress > div, .countdown > div{ transition: none } .opt:active{ transform:none } }
+
+    /* Enhanced Start button */
+    .super-button {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 16px 32px;
+    
+      background: linear-gradient(145deg,#0f0f0f,#1c1c1c);
+      border: 2px solid rgba(255,255,255,.2);
+      border-radius: 100px;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: .6px;
+      cursor: pointer;
+      overflow: hidden;
+      transition: all .4s ease-in-out;
+      box-shadow: 0 0 20px rgba(0,255,255,.1);
+      backdrop-filter: blur(8px);
+      z-index: 1;
+    }
+
+    .super-button::before {
+      content:"";
+      position:absolute;
+      top:-50%; left:-50%;
+      width:200%; height:200%;
+      background:conic-gradient(from 0deg,#ac12c3,#ff00ff,#9220d4);
+      animation:rotate 4s linear infinite;
+      z-index:-2;
+    }
+
+    .super-button::after {
+      content:"";
+      position:absolute;
+      inset:2px;
+      background:#0a0a0a;
+      border-radius:inherit;
+      z-index:-1;
+    }
+
+    .super-button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 40px rgba(0,255,255,.25);
+    }
+
+    .super-button:hover .arrow {
+      transform: translateX(6px);
+    }
+
+    .arrow {
+      width: 22px;
+      height: 22px;
+      transition: transform .3s;
+      color:#be60f4;
+    }
+
+    @keyframes rotate {
+      0% { transform:rotate(0) }
+      100% { transform:rotate(360deg) }
+    }
   </style>
+  <link rel="icon" href="/bg/innerdrive-crest.png" type="image/png">
 </head>
 <body class="home">
   <div class="wrap">
     <div class="card" role="region" aria-live="polite">
       <header>
         <div class="brand">
-          <img class="logo" src="logo-meuraki.jpg" alt="MEURAKI logo">
-          <span>MEURAKI INNERDRIVE™</span>
+          <img class="logo" src="/bg/innerdrive-crest.png" alt="MEURAKI logo">
+          <span> INNERDRIVE™ </span><span style="font-size: 15px; font-weight: 400;">POWERED BY MEURAKI</span>
         </div>
-        <button class="restart" id="restartBtn" aria-label="Restart quiz (manual override)">Restart</button>
       </header>
       <div class="progress" aria-hidden="true"><div id="bar"></div></div>
-      <h1 id="title">Sector 4: Fuel Station</h1>
+      <h1 id="title" style=" font-size: 50px; font-family: 'DragRacing'; text-transform: uppercase; color: #8B5CF6;"><span style="font-family: poppins; letter-spacing: 5px; font-size: 25px; ">Sector 4 <br></span>Fuel Station</h1>
       <div id="stage"></div>
     </div>
   </div>
@@ -184,12 +271,11 @@
     const elTitle = document.getElementById('title');
     const elStage = document.getElementById('stage');
     const elBar = document.getElementById('bar');
-    const restartBtn = document.getElementById('restartBtn');
 
     function render(){
       clearTimers();
 
-      const pct = idx < 0 ? 0 : Math.round(((idx) / QUIZ.length) * 100);
+      const pct = idx < 0 ? 0 : Math.round(((idx + 1) / QUIZ.length) * 100);
       elBar.style.width = pct + '%';
 
       document.body.classList.remove('home','quiz','end');
@@ -210,7 +296,13 @@
           <p class="muted" style="margin:6px 0 22px">
             Three short questions to kickstart your INNERDRIVE. Choose an option and get a bite-sized insight after each tap.
           </p>
-          <button class="btn" id="startBtn" aria-label="Start quiz">Start</button>
+          <button id="startBtn" class="super-button">
+            <span>Start</span>
+            <svg fill="none" viewBox="0 0 24 24" class="arrow">
+              <path stroke-linejoin="round" stroke-linecap="round" stroke-width="2"
+                    stroke="currentColor" d="M5 12h14M13 6l6 6-6 6"></path>
+            </svg>
+          </button>
         </div>
       `;
       document.getElementById('startBtn').addEventListener('click', ()=>{ idx = 0; render(); });
@@ -307,7 +399,7 @@
       window.addEventListener(evt, resetIdleTimer, {passive:true});
     });
 
-    document.getElementById('restartBtn').addEventListener('click', resetToHome);
+    // document.getElementById('restartBtn').addEventListener('click', resetToHome);
 
     render();
   </script>

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 
@@ -21,6 +21,18 @@ export default function GiftPopup({ isOpen, onClose, driverNo, raceType, style }
   } else if (raceType === "standard" || raceType === "exclusive") {
     giftImage = "/bg/generalquest.png";
   }
+
+  useEffect(() => {
+    if (isOpen) {
+      fetch("/api/update-points", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ participantId: driverNo }),
+      }).then(res => res.json())
+        .then(data => console.log("Points updated:", data))
+        .catch(err => console.error("Error updating points:", err));
+    }
+  }, [isOpen, driverNo]);
 
   return (
     <AnimatePresence>
