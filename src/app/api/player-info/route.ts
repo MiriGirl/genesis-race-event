@@ -21,7 +21,7 @@ export async function GET(req: Request) {
 
     let query = supabase
       .from("participants")
-      .select("id, bib, race_no, name, nationality, email, phone");
+      .select("id, bib, race_no, name, nationality, email, phone, line_type, bag_given");
 
     if (participantId) {
       query = query.eq("id", participantId);
@@ -57,6 +57,8 @@ export async function GET(req: Request) {
       country: participant.nationality ?? "UNKNOWN",
       email: participant.email,
       phone: participant.phone,
+      line_type: participant.line_type,
+      bag_given: participant.bag_given,
     });
   } catch (err) {
     console.error("Unexpected error:", err);

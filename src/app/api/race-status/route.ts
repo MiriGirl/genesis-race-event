@@ -34,6 +34,7 @@ async function getRaceStatus(raceNo: string, bib: string) {
       participant_id,
       station_id,
       completed_at,
+       start_time,  
       stations!checkpoints_station_id_fkey (
         order_index,
         access_code
@@ -79,6 +80,22 @@ async function getRaceStatus(raceNo: string, bib: string) {
     return enterStatus;
   }
 
+  // Check participant_times view for completed checkpoints and total time
+  const { data: participantTimesData, error: participantTimesError } = await supabase
+    .from("participant_times")
+    .select("completed_checkpoints, total_time_ms")
+    .eq("race_no", raceNo)
+    .eq("participant_id", participantId)
+    .single();
+
+  if (participantTimesError) {
+    console.error(`Error fetching participant_times for participantId=${participantId}:`, participantTimesError);
+  } else if (participantTimesData?.completed_checkpoints === 6) {
+    const finishedStatus = { type: "finished", currentSector: 6, raceNo, participantId, stationId: null, accessCode: null, totalTime: participantTimesData.total_time_ms };
+    console.log(`Returning type: finished (from participant_times)`, finishedStatus);
+    return finishedStatus;
+  }
+
   const active = checkpoints.find((c) => !c.completed_at);
   if (active) {
     const currentSector = getOrderIndex(active);
@@ -91,7 +108,7 @@ async function getRaceStatus(raceNo: string, bib: string) {
         accessCode = (active.stations as any)?.access_code ?? null;
       }
     }
-    const stopwatchStatus = { type: "stopwatch", currentSector, raceNo, participantId: participantId, stationId, accessCode };
+    const stopwatchStatus = { type: "stopwatch", currentSector, raceNo, participantId: participantId, stationId, accessCode, startTime: active.start_time };
     console.log(`Returning type: stopwatch`, stopwatchStatus);
     return stopwatchStatus;
   }
@@ -109,7 +126,7 @@ async function getRaceStatus(raceNo: string, bib: string) {
         accessCode = (lastCompleted.stations as any)?.access_code ?? null;
       }
     }
-    const enterStatus = { type: "enter", currentSector, raceNo, participantId: participantId, stationId, accessCode };
+    const enterStatus = { type: "enter", currentSector, raceNo, participantId: participantId, stationId, accessCode, startTime: lastCompleted?.start_time ?? null };
     console.log(`Returning type: enter`, enterStatus);
     return enterStatus;
   }
@@ -124,7 +141,7 @@ async function getRaceStatus(raceNo: string, bib: string) {
       accessCode = (lastCompleted.stations as any)?.access_code ?? null;
     }
   }
-  const finishedStatus = { type: "finished", currentSector, raceNo, participantId: participantId, stationId, accessCode };
+  const finishedStatus = { type: "finished", currentSector, raceNo, participantId: participantId, stationId, accessCode, startTime: lastCompleted?.start_time ?? null };
   console.log(`Returning type: finished`, finishedStatus);
   return finishedStatus;
 }

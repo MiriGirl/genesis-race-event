@@ -61,30 +61,7 @@ export default function FooterEnter({
           width: "100%",
         }}
       >
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            height: "40px",
-            backgroundColor: "#A700D1",
-            opacity: 0.79,
-            filter: "blur(20px)",
-            zIndex: 0,
-          }}
-        />
-        <div
-          style={{
-            position: "relative",
-            zIndex: 2,
-            color: "#fff",
-            padding: "14px 0",
-            fontWeight: 600,
-            fontSize: "14px",
-            letterSpacing: "0.05em",
-          }}
-        >
-          SELECT A SECTOR TO LEARN MORE
-        </div>
+        
       </div>
 
       {/* White card */}
@@ -103,7 +80,7 @@ export default function FooterEnter({
           paddingTop: 10,
           position: "relative",
           zIndex: 1,
-          marginTop: "10%",
+         
         }}
       >
         <p

@@ -194,43 +194,39 @@ const derivedLineType =
   e.preventDefault();
   const newErrors = validate();
   setErrors(newErrors);
-  
 
   if (Object.keys(newErrors).length === 0) {
-   const payload = {
+    const payload = {
       ...formData,
-      source_system: "react",      // set to "react" or "react-dev/prod"
-      source_id: "react-form-1"    // unique identifier for this form
+      source_system: "react", // set to "react" or "react-dev/prod"
+      source_id: "react-form-1", // unique identifier for this form
     };
-    
+
     console.log("🚀 Sending payload:", formData);
 
     try {
-  const res = await fetch("/api/proxy-pre-register", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
+      const res = await fetch("/api/proxy-pre-register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
 
-  const data = await res.json();
-console.log("✅ FULL API Response:", data);
+      const data = await res.json();
+      console.log("✅ FULL API Response:", data);
 
-// try to resolve fno regardless of structure
-const fno = data?.race_no || data?.fno || data?.FNO;
+      // try to resolve fno regardless of structure
+      const fno = data?.race_no || data?.fno || data?.FNO;
 
-if (fno) {
-  console.log("➡️ Redirecting with Race No:", fno);
-  window.location.href = `/loading?fno=${encodeURIComponent(fno)}`;
-} else {
-  console.warn("⚠️ No race number found in API response");
-}
-  // 👉 STEP 1: Redirect to loading page with fno
-  if (data?.fno) {
-    window.location.href = `/loading?fno=${data.fno}`;
-  }
-} catch (err) {
-  console.error("❌ Network or server error:", err);
-}
+      if (fno) {
+        console.log("➡️ Redirecting with Race No:", fno);
+        window.location.href = `/registration-loading?fno=${encodeURIComponent(fno)}`;
+      } else {
+        console.warn("⚠️ No race number found in API response");
+      }
+      // Redirect only once to /registration-loading?fno=...
+    } catch (err) {
+      console.error("❌ Network or server error:", err);
+    }
   }
 };
 
@@ -241,13 +237,16 @@ if (fno) {
         flexDirection: "column",
         overflowX: "hidden",
         minHeight: "100vh",
+        width: "100vw",
+        maxWidth: "100vw",
+        boxSizing: "border-box",
       }}
     >
       {/* Hero */}
       <img
         src="/bg/innerdrive-registration-mobile.jpg"
         alt="Hero"
-        style={{ width: "100%", maxWidth: "420px", display: "block" }}
+        style={{ width: "100vw", maxWidth: "100vw", display: "block" }}
       />
 
       {/* White Card */}
@@ -255,13 +254,14 @@ if (fno) {
         style={{
           background: "#fff",
           color: "#000",
-          width: "100%",
-          maxWidth: "400px",
+          width: "100vw",
+          maxWidth: "100vw",
           marginTop: "-24px",
           borderTopLeftRadius: "54px",
           borderTopRightRadius: "54px",
           padding: "24px 16px",
           boxShadow: "0 20px 60px rgba(0,0,0,0.35)",
+          boxSizing: "border-box",
         }}
       >
         <h2
@@ -304,7 +304,7 @@ if (fno) {
               onChange={handleChange}
               onBlur={(e) => setErrors({ ...errors, name: validateField("name", e.target.value) })}
               style={{
-                width: "85%",
+                width: "100%",
                 height: "50px",
                 background: "#EFEDFF",
                 borderRadius: "12px",
@@ -312,6 +312,7 @@ if (fno) {
                 fontSize: "15px",
                 color: "#777",
                 border: errors.name ? "2px solid #7559FF" : "0px solid #ccc",
+                boxSizing: "border-box",
               }}
               required
             />
@@ -329,7 +330,7 @@ if (fno) {
               onChange={handleChange}
               onBlur={(e) => setErrors({ ...errors, email: validateField("email", e.target.value) })}
               style={{
-                width: "85%",
+                width: "100%",
                 height: "50px",
                 background: "#EFEDFF",
                 borderRadius: "12px",
@@ -337,6 +338,7 @@ if (fno) {
                 fontSize: "15px",
                 color: "#777",
                 border: errors.email ? "2px solid #7559FF" : "0px solid #ccc",
+                boxSizing: "border-box",
               }}
               required
             />
@@ -354,7 +356,7 @@ if (fno) {
               onChange={handleChange}
               onBlur={(e) => setErrors({ ...errors, phone: validateField("phone", e.target.value) })}
               style={{
-                width: "85%",
+                width: "100%",
                 height: "50px",
                 background: "#EFEDFF",
                 borderRadius: "12px",
@@ -362,6 +364,7 @@ if (fno) {
                 fontSize: "15px",
                 color: "#777",
                 border: errors.phone ? "2px solid #7559FF" : "0px solid #ccc",
+                boxSizing: "border-box",
               }}
               required
             />
@@ -380,7 +383,7 @@ if (fno) {
         setErrors({ ...errors, nationality: validateField("nationality", e.target.value) })
       }
       style={{
-        width: "98%",
+        width: "100%",
         height: "50px",
         background: "#fff",
         boxShadow: "0 4px 4px rgba(0,0,0,0.07)",
@@ -391,6 +394,7 @@ if (fno) {
         border: errors.nationality ? "2px solid #7559FF" : "1px solid #e5e5e5ff",
         appearance: "none", // hide default arrow
         outline: "none",
+        boxSizing: "border-box",
       }}
       required
     >
@@ -454,17 +458,18 @@ if (fno) {
         })
       }
       style={{
-        width: "98%",
+        width: "100%",
         height: "50px",
         background: "#fff",
         borderRadius: "12px",
         padding: "0 16px",
         fontSize: "15px",
-          boxShadow: "0 4px 4px rgba(0,0,0,0.07)",
+        boxShadow: "0 4px 4px rgba(0,0,0,0.07)",
         color: "#777",
         border: errors.age_group ? "2px solid #7559FF" : "1px solid #e5e5e5ff",
         appearance: "none", // hide native arrow
         outline: "none",
+        boxSizing: "border-box",
       }}
       required
     >

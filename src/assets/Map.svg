@@ -1,4 +1,4 @@
-<svg  width="100%" height="auto" width="356" height="345" viewBox="0 0 356 345" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<svg width="356" height="345" viewBox="0 0 356 345" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 <g id="Map">
 <g id="Map-bg" filter="url(#filter0_f_104_685)">
 <rect width="356" height="345" rx="31" fill="#252525"/>
@@ -24,49 +24,49 @@
 <circle id="Ellipse 182" cx="316.5" cy="193.5" r="9" fill="black" stroke="#7E7E7E" stroke-dasharray="2 2"/>
 </g>
 </g>
-<path  id="track-1" d="M278 307V97C278 69.3857 255.614 47 228 47L177.5 47" stroke="#DADADA" stroke-opacity="0.15" stroke-width="12"/>
-<path id="track-2" d="M41 95V95C41 68.4903 62.4903 47 89 47L174 47" stroke="#DADADA" stroke-opacity="0.15" stroke-width="12"/>
+<path id="track-1" d="M278 307V97C278 69.3857 255.614 47 228 47L177.5 47" stroke="#404040" stroke-width="12"/>
+<path id="track-2" d="M166.5 46.5H90C73.8333 45.6667 41.5 54.9 41.5 98.5" stroke="#404040" stroke-width="12"/>
 <path id="track-3" d="M41 95L41 173" stroke="#DADADA" stroke-opacity="0.15" stroke-width="12"/>
-<path id="Sector 4" d="M43 173V247" stroke="#DADADA" stroke-opacity="0.15" stroke-width="12"/>
-<path id="track-5" d="M41 247.263C41 247.263 41 246.747 41 266.496C41 284.998 55.9985 300 74.5 300V300C93.0015 300 108 285.002 108 266.5V193" stroke="#DADADA" stroke-opacity="0.15" stroke-width="12"/>
-<path id="track-6" d="M228 268C228 244.212 228 214.126 228 188.993C228 161.379 205.614 139 178 139H158C130.386 139 108 161.386 108 189V193.058" stroke="#DADADA" stroke-opacity="0.15" stroke-width="12"/>
+<path id="track-4" d="M43 173V247" stroke="#DADADA" stroke-opacity="0.15" stroke-width="12"/>
+<path id="track-5" d="M41 247.263C41 247.263 41 246.747 41 266.496C41 284.998 55.9985 300 74.5 300V300C93.0015 300 108 285.002 108 266.5V193V189.5C108 161.886 130.386 139.5 158 139.5H169" stroke="#DADADA" stroke-opacity="0.15" stroke-width="12"/>
+<path id="track-6" d="M165.5 139H178C205.614 139 228 161.379 228 188.993C228 214.126 228 244.212 228 268" stroke="#DADADA" stroke-opacity="0.15" stroke-width="12"/>
 <g id="sector-3">
 <text id="SECTOR" transform="translate(9 116) rotate(-90)" fill="white" xml:space="preserve" style="white-space: pre" font-family="Poppins" font-size="10" font-weight="600" letter-spacing="0px"><tspan x="0.439453" y="12.5">SECTOR</tspan></text>
 <g id="number-3">
-<rect id="Rectangle 111141366" x="29" y="81" width="30" height="30" rx="15" fill="white"/>
+<rect id="number3" x="29" y="81" width="30" height="30" rx="15" fill="white"/>
 <text id="3" transform="translate(38 87)" fill="#A349EF" xml:space="preserve" style="white-space: pre" font-family="Poppins" font-size="17" font-weight="bold" letter-spacing="0px"><tspan x="0.353516" y="14.95">3</tspan></text>
 </g>
 </g>
 <g id="sector-4">
 <text id="SECTOR_2" transform="translate(9 193) rotate(-90)" fill="white" xml:space="preserve" style="white-space: pre" font-family="Poppins" font-size="10" font-weight="600" letter-spacing="0px"><tspan x="0.439453" y="12.5">SECTOR</tspan></text>
 <g id="number-4">
-<rect id="Rectangle 111141367" x="29" y="160" width="30" height="30" rx="15" fill="white"/>
+<rect id="number4" x="29" y="160" width="30" height="30" rx="15" fill="white"/>
 <text id="4" transform="translate(37 166)" fill="#A349EF" xml:space="preserve" style="white-space: pre" font-family="Poppins" font-size="17" font-weight="bold" letter-spacing="0px"><tspan x="0.247559" y="14.95">4</tspan></text>
 </g>
 </g>
 <g id="sector-1">
 <text id="SECTOR_3" transform="translate(258 266)" fill="white" xml:space="preserve" style="white-space: pre" font-family="Poppins" font-size="10" font-weight="600" letter-spacing="0px"><tspan x="0.439453" y="12.5">SECTOR</tspan></text>
-<rect id="Rectangle 111141365" x="265" y="286" width="25" height="25" rx="12.5" fill="#A349EF"/>
+<rect id="number1" x="265" y="286" width="25" height="25" rx="12.5" fill="#7000E0"/>
 <text id="1" transform="translate(274 289)" fill="white" xml:space="preserve" style="white-space: pre" font-family="Poppins" font-size="17" font-weight="bold" letter-spacing="0px"><tspan x="0.304199" y="14.95">1</tspan></text>
 </g>
 <g id="sector-5">
 <text id="SECTOR_4" transform="translate(9 274) rotate(-90)" fill="white" xml:space="preserve" style="white-space: pre" font-family="Poppins" font-size="10" font-weight="600" letter-spacing="0px"><tspan x="0.439453" y="12.5">SECTOR</tspan></text>
 <g id="number-5">
-<rect id="circle" x="29" y="237" width="30" height="30" rx="15" fill="white"/>
+<rect id="number5" x="29" y="237" width="30" height="30" rx="15" fill="white"/>
 <text id="5" transform="translate(38 243)" fill="#A349EF" xml:space="preserve" style="white-space: pre" font-family="Poppins" font-size="17" font-weight="bold" letter-spacing="0px"><tspan x="0.47168" y="14.95">5</tspan></text>
 </g>
 </g>
 <g id="f1-car">
 <g id="Rectangle 111141364" filter="url(#filter1_f_104_685)">
-<rect x="188" y="164" width="90" height="52" transform="rotate(90 188 164)" fill="#A700D1" fill-opacity="0.79"/>
+<rect x="192" y="162" width="90" height="52" transform="rotate(90 192 162)" fill="#A700D1" fill-opacity="0.79"/>
 </g>
-<rect id="image 9" x="136" y="168" width="55" height="82" fill="url(#pattern0_104_685)"/>
+<rect id="image 9" x="140" y="166" width="55" height="82" fill="url(#pattern0_104_685)"/>
 </g>
 <g id="sector-6">
-<text id="SECTOR_5" transform="translate(144 100)" fill="white" xml:space="preserve" style="white-space: pre" font-family="Poppins" font-size="10" font-weight="600" letter-spacing="0px"><tspan x="0.439453" y="12.5">SECTOR</tspan></text>
+<text id="SECTOR_5" transform="translate(149 100)" fill="white" xml:space="preserve" style="white-space: pre" font-family="Poppins" font-size="10" font-weight="600" letter-spacing="0px"><tspan x="0.439453" y="12.5">SECTOR</tspan></text>
 <g id="number-6">
-<rect id="Rectangle 111141369" x="149" y="120" width="30" height="30" rx="15" fill="white"/>
-<text id="6" transform="translate(158 127)" fill="#A349EF" xml:space="preserve" style="white-space: pre" font-family="Poppins" font-size="17" font-weight="bold" letter-spacing="0px"><tspan x="0.0878906" y="14.95">6</tspan></text>
+<rect id="number6" x="154" y="120" width="30" height="30" rx="15" fill="white"/>
+<text id="6" transform="translate(163 127)" fill="#A349EF" xml:space="preserve" style="white-space: pre" font-family="Poppins" font-size="17" font-weight="bold" letter-spacing="0px"><tspan x="0.0878906" y="14.95">6</tspan></text>
 </g>
 </g>
 <g id="Finish-line">
@@ -127,10 +127,10 @@
 </g>
 </g>
 <g id="sector-2">
-<text id="SECTOR_6" transform="translate(141 13)" fill="white" xml:space="preserve" style="white-space: pre" font-family="Poppins" font-size="10" font-weight="600" letter-spacing="0px"><tspan x="0.439453" y="12.5">SECTOR</tspan></text>
+<text id="SECTOR_6" transform="translate(146 13)" fill="white" xml:space="preserve" style="white-space: pre" font-family="Poppins" font-size="10" font-weight="600" letter-spacing="0px"><tspan x="0.439453" y="12.5">SECTOR</tspan></text>
 <g id="number-2">
-<rect id="Rectangle 111141364_2" x="146" y="32" width="30" height="30" rx="15" fill="white"/>
-<text id="2" transform="translate(156 38)" fill="#A349EF" xml:space="preserve" style="white-space: pre" font-family="Poppins" font-size="17" font-weight="bold" letter-spacing="0px"><tspan x="0.144043" y="14.95">2</tspan></text>
+<rect id="number2" x="151" y="32" width="30" height="30" rx="15" fill="white"/>
+<text id="2" transform="translate(161 38)" fill="#A349EF" xml:space="preserve" style="white-space: pre" font-family="Poppins" font-size="17" font-weight="bold" letter-spacing="0px"><tspan x="0.144043" y="14.95">2</tspan></text>
 </g>
 </g>
 </g>
@@ -140,7 +140,7 @@
 <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
 <feGaussianBlur stdDeviation="10" result="effect1_foregroundBlur_104_685"/>
 </filter>
-<filter id="filter1_f_104_685" x="82" y="110" width="160" height="198" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<filter id="filter1_f_104_685" x="86" y="108" width="160" height="198" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
 <feFlood flood-opacity="0" result="BackgroundImageFix"/>
 <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
 <feGaussianBlur stdDeviation="27" result="effect1_foregroundBlur_104_685"/>

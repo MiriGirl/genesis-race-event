@@ -40,12 +40,12 @@ export default function EnterCode({ isOpen, onClose, onSubmit, currentSector, er
 
   // ✅ static codes
   const validCodes: Record<string, number> = {
-    "1111": 1,
-    "2222": 2,
-    "3333": 3,
-    "4444": 4,
-    "5555": 5,
-    "6666": 6,
+    "71P4": 1,
+    "98R2": 2,
+    "6F35": 3,
+    "4F79": 4,
+    "3C68": 5,
+    "8P14": 6,
   };
 
   useEffect(() => {

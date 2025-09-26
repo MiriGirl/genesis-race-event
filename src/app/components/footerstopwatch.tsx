@@ -21,10 +21,19 @@ export default function FooterStopwatch({ currentSector, onFinish, onStop, raceN
   console.log("FooterStopwatch rendered with currentSector:", currentSector, "time:", time);
 
   useEffect(() => {
-    const startTimestamp = startTime ? new Date(startTime).getTime() : Date.now();
+    if (!startTime) {
+      console.warn("⏱ No startTime provided to FooterStopwatch");
+      return;
+    }
+    const startTimestamp = new Date(startTime).getTime();
+    if (isNaN(startTimestamp)) {
+      console.warn("⏱ Invalid startTime:", startTime);
+      return;
+    }
     if (running) {
       timerRef.current = setInterval(() => {
-        setTime(Math.floor((Date.now() - startTimestamp) / 1000) || 0);
+        const elapsed = Math.floor((Date.now() - startTimestamp) / 1000);
+        setTime(elapsed >= 0 ? elapsed : 0);
       }, 1000);
     }
     return () => {
@@ -32,7 +41,7 @@ export default function FooterStopwatch({ currentSector, onFinish, onStop, raceN
         clearInterval(timerRef.current);
       }
     };
-  }, [startTime, running]);
+  }, [running, startTime]);
 
   useEffect(() => {
     console.log("🔍 FooterStopwatch props:", {
@@ -185,6 +194,7 @@ export default function FooterStopwatch({ currentSector, onFinish, onStop, raceN
           console.log("➡️ Sending save-split payload:", {
             raceNo,
             participantId,
+          
             stationId,
             accessCode,
             split_ms: splitMs,

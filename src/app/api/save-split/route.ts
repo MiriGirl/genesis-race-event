@@ -8,24 +8,39 @@ const supabase = createClient(
 
 export async function POST(req: Request) {
   try {
-    const { participantId, stationId, raceNo, accessCode, splitMs, completedAt } = await req.json();
+    const { participantId, stationId, raceNo, accessCode, completedAt } = await req.json();
 
     if (!participantId || !stationId || !raceNo || !accessCode) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    const checkpointPayload = {
-      participant_id: participantId,
-      station_id: stationId,
-      race_no: raceNo,
-      access_code: accessCode,
-      split_ms: splitMs ?? null,
-      completed_at: completedAt ?? new Date().toISOString(),
-    };
+    const completedAtValue = completedAt ?? new Date().toISOString();
 
+    // Fetch the checkpoint row with id and start_time for the participant and station
+    const { data: checkpoint, error: fetchError } = await supabase
+      .from("checkpoints")
+      .select("id, start_time")
+      .eq("participant_id", participantId)
+      .eq("station_id", stationId)
+      .maybeSingle();
+
+    if (fetchError) {
+      return NextResponse.json({ error: fetchError.message, details: fetchError }, { status: 500 });
+    }
+
+    if (!checkpoint || !checkpoint.start_time) {
+      return NextResponse.json({ error: "Sector not started" }, { status: 400 });
+    }
+
+    const startTime = new Date(checkpoint.start_time).getTime();
+    const completedTime = new Date(completedAtValue).getTime();
+    const splitMs = completedTime - startTime;
+
+    // Update the checkpoint row with completed_at and split_ms
     const { data, error } = await supabase
       .from("checkpoints")
-      .upsert([checkpointPayload], { onConflict: "participant_id,station_id" })
+      .update({ completed_at: completedAtValue, split_ms: splitMs })
+      .eq("id", checkpoint.id)
       .select();
 
     if (error) {

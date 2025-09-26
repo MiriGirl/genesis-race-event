@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Sector 4: Fuel Station — MEURAKI INNERDRIVE™</title>
+  <style>
+    :root{
+      --bg: #0b0615;
+      --bg2: #120a23;
+      --card: rgba(12, 10, 22, .78);
+      --text: #f3f4f6;
+      --muted: #c7c9d1;
+      --brand: #8B5CF6;
+      --brand-2: #EC4899;
+      --shadow: 0 20px 60px rgba(0,0,0,.55);
+      --radius: 18px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans";
+      color: var(--text);
+      background:
+        linear-gradient(180deg, rgba(10,6,20,.5), rgba(10,6,20,.75)),  /* contrast mask */
+        url('bg-hero.jpg') center / cover fixed no-repeat,
+        radial-gradient(900px 600px at 25% -10%, rgba(139,92,246,.18), transparent 45%),
+        radial-gradient(900px 600px at 100% 0%, rgba(236,72,153,.18), transparent 50%),
+        linear-gradient(180deg, var(--bg), var(--bg2));
+      min-height: 100%;
+    }
+    body.quiz::before{
+      content:""; position:fixed; inset:-10%;
+      background:
+        radial-gradient(800px 400px at 10% 110%, rgba(236,72,153,.12), transparent 55%),
+        radial-gradient(1000px 520px at 90% -10%, rgba(139,92,246,.16), transparent 55%);
+      filter: blur(18px);
+      pointer-events:none;
+      animation: float 12s ease-in-out infinite alternate;
+      z-index:-1;
+    }
+    @keyframes float { from { transform:translateY(0px) } to { transform:translateY(16px) } }
+
+    .wrap{ display:flex; align-items:center; justify-content:center; min-height:100vh; padding:24px; }
+    .card{
+      width:min(900px, 100%);
+      background: var(--card);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: var(--radius);
+      padding: clamp(20px, 3vw, 32px);
+      box-shadow: var(--shadow);
+    }
+    header{
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      margin-bottom: 14px;
+    }
+    .brand{
+      display:flex; align-items:center; gap:12px;
+      font-weight:800; letter-spacing:.2px;
+      font-size: clamp(18px, 2.4vw, 22px);
+      line-height:1;
+    }
+    .brand .logo{
+      width:34px; height:34px; object-fit:cover;
+      border-radius:8px;
+      box-shadow: 0 0 0 1px rgba(255,255,255,.5), 0 0 16px rgba(139,92,246,.55);
+      background:#fff;
+      flex:0 0 auto;
+    }
+    .restart{
+      appearance:none; border:0; border-radius:12px;
+      padding:10px 14px; background:#0e1120; color:var(--muted);
+      font-weight:700; cursor:pointer;
+    }
+    .progress{ margin: 6px 0 20px; height: 8px; background: rgba(255,255,255,.10); border-radius: 999px; overflow:hidden; }
+    .progress > div{ height:100%; width:0%; background: linear-gradient(90deg, var(--brand), var(--brand-2)); transition: width .35s ease; }
+    h1{ font-size: clamp(22px, 3.8vw, 30px); margin: 8px 0 10px; line-height:1.25; }
+    .question{ color: #f3f4f6; font-size: clamp(18px, 2.6vw, 20px); margin: 10px 0 18px; }
+    .options{display:grid; gap:12px}
+    .opt{
+      display:flex; align-items:center; gap:12px;
+      width:100%; border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04);
+      border-radius: 16px; padding: 16px 18px;
+      font-size: clamp(17px, 2.4vw, 19px);
+      color: var(--text);
+      cursor:pointer; user-select:none; -webkit-user-select:none; touch-action: manipulation;
+      min-height: 64px; transition: transform .05s ease, border-color .2s ease, background .2s ease;
+    }
+    .opt:active{ transform: scale(.99) }
+    .opt .key{ width: 34px; height: 34px; border-radius: 9px; display:grid; place-items:center; background: rgba(255,255,255,.08); font-weight:800; color:#e5e7eb; flex: 0 0 auto; }
+    .opt.correct{ border-color: rgba(34,197,94,.6); background: rgba(34,197,94,.12) }
+    .opt.wrong{ border-color: rgba(239,68,68,.6); background: rgba(239,68,68,.12) }
+    .fact{ margin-top: 18px; padding: 16px 18px; border-radius: 14px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.10); display:none; font-size: clamp(15px, 2.2vw, 17px); }
+    .fact.show{ display:block }
+    .fact .badge{ display:inline-flex; align-items:center; gap:8px; font-weight:800; color:#e2e8f0; margin-bottom:8px; }
+    .fact .badge svg{width:18px;height:18px;flex:0 0 auto}
+    .fact a{ color: #F0ABFC; text-decoration: underline }
+    .actions{ display:flex; gap:12px; margin-top:16px }
+    .btn{ appearance:none; border:0; border-radius:14px; padding: 14px 18px; font-weight:900; letter-spacing:.2px; background: linear-gradient(90deg, var(--brand), var(--brand-2)); color:#0b0615; cursor:pointer; min-width: 140px; }
+    .btn[disabled]{ opacity:.5; cursor:not-allowed }
+    .ghost{ background: rgba(255,255,255,.08); color:#e5e7eb }
+    .center{ text-align:center }
+    .muted{ color: var(--muted) }
+    .end{ text-align:center; padding: 10px 0 0; }
+    .countdown{ margin: 14px auto 0; height:10px; width: 60%; background: rgba(255,255,255,.10); border-radius:999px; overflow:hidden; }
+    .countdown > div{ height:100%; width:0%; background: linear-gradient(90deg, var(--brand), var(--brand-2)); transition: width 10s linear; }
+    @media (prefers-reduced-motion: reduce){ .progress > div, .countdown > div{ transition: none } .opt:active{ transform:none } }
+  </style>
+</head>
+<body class="home">
+  <div class="wrap">
+    <div class="card" role="region" aria-live="polite">
+      <header>
+        <div class="brand">
+          <img class="logo" src="logo-meuraki.jpg" alt="MEURAKI logo">
+          <span>MEURAKI INNERDRIVE™</span>
+        </div>
+        <button class="restart" id="restartBtn" aria-label="Restart quiz (manual override)">Restart</button>
+      </header>
+      <div class="progress" aria-hidden="true"><div id="bar"></div></div>
+      <h1 id="title">Sector 4: Fuel Station</h1>
+      <div id="stage"></div>
+    </div>
+  </div>
+
+  <script>
+    const IDLE_MS = 45000;
+    const END_RESET_MS = 10000;
+
+    const QUIZ = [
+      {
+        id: "q1",
+        title: "Q1 — Hydration",
+        question: "How much water should an athlete drink before a 2-hour race in Singapore’s hot and humid climate?",
+        options: [
+          { key: "A", text: "250 ml about 5 minutes before the race", correct: false },
+          { key: "B", text: "500 ml about 30 minutes before the race", correct: true },
+          { key: "C", text: "1 litre the night before is enough", correct: false }
+        ],
+        fact: "Sport Singapore recommends about 500 ml of water 30 minutes before exercise and 250–500 ml every 30 minutes during activity, plus roughly 1 litre after to replace sweat losses.",
+        source: { label: "Sport Singapore – “Sports Safety & Health Check”", href: "https://www.sportsingapore.gov.sg/sport-education/sports-safety/sports-safety-and-health-check" }
+      },
+      {
+        id: "q2",
+        title: "Q2 — Lasting Energy",
+        question: "Which nutrient provides the longest-lasting energy for endurance activities?",
+        options: [
+          { key: "A", text: "Complex carbohydrates (whole grains, rice, pasta)", correct: true },
+          { key: "B", text: "Simple sugars like candy", correct: false },
+          { key: "C", text: "Only protein shakes", correct: false }
+        ],
+        fact: "HealthHub Singapore notes that complex carbohydrates give a slow, steady release of glucose, helping athletes maintain energy throughout long workouts.",
+        source: { label: "HealthHub – “Power Up with Sports Nutrition”", href: "https://www.healthhub.sg/well-being-and-lifestyle/food-diet-and-nutrition/power_up_sports_nutrition" }
+      },
+      {
+        id: "q3",
+        title: "Q3 — Recovery & Electrolytes",
+        question: "How soon after intense exercise should you replenish electrolytes?",
+        options: [
+          { key: "A", text: "Within 30 minutes after finishing", correct: true },
+          { key: "B", text: "Only if you still feel thirsty the next day", correct: false },
+          { key: "C", text: "About 2 hours after cool-down", correct: false }
+        ],
+        fact: "ActiveSG Circle advises replacing both fluids and electrolytes within 30 minutes after vigorous activity to speed rehydration and recovery.",
+        source: { label: "ActiveSG Circle – “The Importance of Hydration during Physical Activity”", href: "https://www.activesgcircle.gov.sg/read/the-importance-of-hydration-during-physical-activity" }
+      }
+    ];
+
+    const FUN_INSIGHT = {
+      text: "HealthHub Singapore recommends filling ½ your plate with vegetables and fruit at every meal to boost fibre and essential vitamins, and to help maintain a healthy weight.",
+      href: "https://www.healthhub.sg/programmes/nutrition-hub/eat-more/"
+    };
+
+    let idx = -1;
+    let answered = false;
+    let idleTimer = null;
+    let endTimer = null;
+
+    const elTitle = document.getElementById('title');
+    const elStage = document.getElementById('stage');
+    const elBar = document.getElementById('bar');
+    const restartBtn = document.getElementById('restartBtn');
+
+    function render(){
+      clearTimers();
+
+      const pct = idx < 0 ? 0 : Math.round(((idx) / QUIZ.length) * 100);
+      elBar.style.width = pct + '%';
+
+      document.body.classList.remove('home','quiz','end');
+      if(idx < 0){ document.body.classList.add('home'); }
+      else if(idx < QUIZ.length){ document.body.classList.add('quiz'); }
+      else { document.body.classList.add('end'); }
+
+      if(idx < 0){ renderStart(); }
+      else if(idx < QUIZ.length){ renderQuestion(QUIZ[idx], idx+1, QUIZ.length); }
+      else{ renderEnd(); }
+      resetIdleTimer();
+    }
+
+    function renderStart(){
+      // Replaced heading with Sector 4 title (already set in H1)
+      elStage.innerHTML = `
+        <div class="center">
+          <p class="muted" style="margin:6px 0 22px">
+            Three short questions to kickstart your INNERDRIVE. Choose an option and get a bite-sized insight after each tap.
+          </p>
+          <button class="btn" id="startBtn" aria-label="Start quiz">Start</button>
+        </div>
+      `;
+      document.getElementById('startBtn').addEventListener('click', ()=>{ idx = 0; render(); });
+    }
+
+    function renderQuestion(q, n, total){
+      elTitle.textContent = q.title;
+      elStage.innerHTML = `
+        <div class="question" id="qtext">${q.question}</div>
+        <div class="options" id="opts"></div>
+        <div class="fact" id="fact" role="group" aria-live="polite">
+          <div class="badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 19l9-7-9-7-9 7 9 7z"/><path d="M12 12l9-7"/><path d="M12 12l-9-7"/></svg>
+            Quick insight
+          </div>
+          <div id="factText" class="muted"></div>
+          <div style="margin-top:6px"><a id="factLink" href="#" target="_blank" rel="noopener">Source</a></div>
+        </div>
+        <div class="actions"><button class="btn" id="nextBtn" disabled>${n === total ? "Finish" : "Next"}</button></div>
+        <p class="muted center" style="margin-top:8px">${n} of ${total}</p>
+      `;
+
+      const optsEl = document.getElementById('opts');
+      q.options.forEach((o)=>{
+        const b = document.createElement('button');
+        b.className = 'opt';
+        b.setAttribute('data-key', o.key);
+        b.innerHTML = `<span class="key">${o.key}</span> <span>${o.text}</span>`;
+        b.addEventListener('click', ()=> choose(o, b, q));
+        optsEl.appendChild(b);
+      });
+
+      document.getElementById('nextBtn').addEventListener('click', ()=>{ if(!answered) return; idx += 1; answered = false; render(); });
+    }
+
+    function renderEnd(){
+      elTitle.textContent = "Great job!";
+      elStage.innerHTML = `
+        <div class="end">
+          <p class="muted">Thanks for playing.</p>
+          <div class="fact show" style="margin-top:18px">
+            <div class="badge">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 19l9-7-9-7-9 7 9 7z"/><path d="M12 12l9-7"/><path d="M12 12l-9-7"/></svg>
+              Fun local insight
+            </div>
+            <div class="muted">${FUN_INSIGHT.text} <a href="${FUN_INSIGHT.href}" target="_blank" rel="noopener">Learn more</a>.</div>
+          </div>
+          <div class="countdown" aria-hidden="true"><div id="cd"></div></div>
+          <div class="actions" style="justify-content:center;margin-top:16px">
+            <button class="btn" id="restartNow">Restart</button>
+          </div>
+        </div>
+      `;
+      const cd = document.getElementById('cd');
+      requestAnimationFrame(()=>{ cd.style.width = "100%"; });
+      endTimer = setTimeout(resetToHome, END_RESET_MS);
+      document.getElementById('restartNow').addEventListener('click', resetToHome);
+    }
+
+    function choose(opt, button, q){
+      if(answered) return;
+      answered = true;
+      document.querySelectorAll('.opt').forEach(b=>{
+        const key = b.getAttribute('data-key');
+        const o = q.options.find(x=>x.key===key);
+        if(o.correct) b.classList.add('correct');
+        if(b===button && !o.correct) b.classList.add('wrong');
+        b.disabled = true;
+      });
+      document.getElementById('factText').textContent = q.fact;
+      document.getElementById('factLink').textContent = q.source.label;
+      document.getElementById('factLink').href = q.source.href;
+      document.getElementById('fact').classList.add('show');
+      document.getElementById('nextBtn').disabled = false;
+      resetIdleTimer();
+    }
+
+    function resetToHome(){
+      idx = -1; answered = false; elTitle.textContent = "Sector 4: Fuel Station"; render();
+      window.scrollTo({top:0, behavior:"instant"});
+    }
+
+    function clearTimers(){
+      if(idleTimer) { clearTimeout(idleTimer); idleTimer = null; }
+      if(endTimer) { clearTimeout(endTimer); endTimer = null; }
+    }
+
+    function resetIdleTimer(){
+      if(idleTimer) clearTimeout(idleTimer);
+      idleTimer = setTimeout(resetToHome, IDLE_MS);
+    }
+
+    ["touchstart","touchmove","click","keydown","mousemove"].forEach(evt=>{
+      window.addEventListener(evt, resetIdleTimer, {passive:true});
+    });
+
+    document.getElementById('restartBtn').addEventListener('click', resetToHome);
+
+    render();
+  </script>
+</body>
+</html>

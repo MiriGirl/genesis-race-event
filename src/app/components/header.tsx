@@ -6,7 +6,7 @@ interface HeaderProps {
   fno: string;
   name: string;
   country?: string;
-  raceTime?: string;
+  raceTime?: string | React.ReactNode;
   flag?: string;
 }
 
@@ -74,27 +74,57 @@ export default function Header({
       <div style={{ flex: 1 }} />
 
       {/* Right: Race Time */}
-      <div style={{ textAlign: "center", lineHeight: 1.2 }}>
-        <span
-          style={{
-            fontSize: "14px",
-            color: "#ccc",
-            letterSpacing: "1px",
-          }}
-        >
-          RACE TIME
-        </span>
-        <br />
-        <span
-          style={{
-            fontSize: "30px",
-            fontWeight: 600,
-            color: "#fff",
-          }}
-        >
-          {raceTime}
-        </span>
-      </div>
+      <GlowRaceTime raceTime={raceTime} />
     </header>
+  );
+}
+// Glowing Race Time component with pulse animation on update
+import { useEffect, useRef, useState } from "react";
+
+function GlowRaceTime({ raceTime }: { raceTime?: string | React.ReactNode }) {
+  const [glow, setGlow] = useState(false);
+  const prevRaceTime = useRef<string | React.ReactNode | undefined>(raceTime);
+
+  useEffect(() => {
+    if (
+      prevRaceTime.current !== undefined &&
+      raceTime !== prevRaceTime.current
+    ) {
+      setGlow(true);
+      const timeout = setTimeout(() => setGlow(false), 600);
+      prevRaceTime.current = raceTime;
+      return () => clearTimeout(timeout);
+    }
+    prevRaceTime.current = raceTime;
+  }, [raceTime]);
+
+  return (
+    <div style={{ textAlign: "center", lineHeight: 1.2 }}>
+      <div
+        style={{
+          fontSize: "14px",
+          color: "#ccc",
+          letterSpacing: "1px",
+        }}
+      >
+        RACE TIME
+      </div>
+      <span
+        style={{
+          display: "block",
+          fontSize: "30px",
+          fontWeight: 600,
+          color: "#fff",
+          transition: "text-shadow 0.3s cubic-bezier(0.4,0,0.2,1)",
+          textShadow: glow
+            ? "0 0 16px #fff, 0 0 32px #f0f, 0 0 48px #0ff"
+            : "0 0 2px #fff",
+          willChange: "text-shadow",
+          marginTop: 2,
+        }}
+      >
+        {raceTime}
+      </span>
+    </div>
   );
 }
