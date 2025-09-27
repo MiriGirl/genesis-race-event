@@ -14,6 +14,9 @@ export default function AdminApp({ isOpen, onClose }: AdminAppProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [giveLoading, setGiveLoading] = useState(false);
+  // New state for t-shirt and bundle total
+  const [tshirtTotal, setTshirtTotal] = useState(0);
+  const [bundleTotal, setBundleTotal] = useState(0);
 
   // When 5 digits entered, fetch bag status
   useEffect(() => {
@@ -94,40 +97,121 @@ export default function AdminApp({ isOpen, onClose }: AdminAppProps) {
   }
 
   // State for merch purchase
-  const [tshirtType, setTshirtType] = useState("Classic");
-  const [tshirtQty, setTshirtQty] = useState(0);
   const [capQty, setCapQty] = useState(0);
   const [tumblerQty, setTumblerQty] = useState(0);
-  const [bundleType, setBundleType] = useState("Bundle 1");
-  const [bundleQty, setBundleQty] = useState(0);
 
-  // Prices (example values)
-  const tshirtPrices: Record<string, number> = {
-    Classic: 20.0,
-    Slim: 22.0,
-    Sport: 25.0,
-    Vintage: 23.0,
-  };
+  // Updated cap and tumbler prices
+  const capPrice = 25.0;
+  const tumblerPrice = 28.0;
 
-  const capPrice = 15.0;
-  const tumblerPrice = 18.0;
-
-  const bundlePrices: Record<string, number> = {
-    "Bundle 1": 50.0,
-    "Bundle 2": 55.0,
-    "Bundle 3": 60.0,
-    "Bundle 4": 65.0,
-    "Bundle 5": 70.0,
-    "Bundle 6": 75.0,
-    "Bundle 7": 80.0,
-  };
-
-  const tshirtTotal = tshirtQty * (tshirtPrices[tshirtType] || 0);
   const capTotal = capQty * capPrice;
   const tumblerTotal = tumblerQty * tumblerPrice;
-  const bundleTotal = bundleQty * (bundlePrices[bundleType] || 0);
 
-  const totalToPay = tshirtTotal + capTotal + tumblerTotal + bundleTotal;
+  // Use new tshirtTotal and bundleTotal from state
+  const totalToPay = tshirtTotal + bundleTotal + capTotal + tumblerTotal;
+
+  // Handler for PAY button: submit CAP, TUMBLER, TSHIRT, and BUNDLE purchases to API
+  const handlePay = async () => {
+    // Collect purchases for CAP and TUMBLER (always pass fno if exists)
+    const purchases: {
+      type: string;
+      qty: number;
+      price?: number;
+      item?: string;
+      fno?: string;
+    }[] = [];
+    // Always pass fno if exists (for all items)
+    const fnoField = fno ? { fno: "F" + fno } : {};
+    if (capQty > 0) {
+      purchases.push({
+        type: "CAP",
+        qty: capQty,
+        price: capPrice,
+        item: "Cap",
+        ...fnoField,
+      });
+    }
+    if (tumblerQty > 0) {
+      purchases.push({
+        type: "TUMBLER",
+        qty: tumblerQty,
+        price: tumblerPrice,
+        item: "Tumbler",
+        ...fnoField,
+      });
+    }
+    // --- TSHIRT: collect from TShirtRow state
+    let tshirtRows: any[] = [];
+    if (typeof window !== "undefined" && (window as any).__tshirtRows) {
+      tshirtRows = (window as any).__tshirtRows;
+    }
+    let bundleRows: any[] = [];
+    if (typeof window !== "undefined" && (window as any).__bundleRows) {
+      bundleRows = (window as any).__bundleRows;
+    }
+    // Add TSHIRT purchases (ensure item_type/item not null, always pass fno if exists)
+    if (Array.isArray(tshirtRows)) {
+      tshirtRows.forEach((row) => {
+        if (row && row.qty > 0 && row.model && row.variant) {
+          purchases.push({
+            type: "TSHIRT",
+            item: row.model && row.variant ? row.model + " " + row.variant : "TShirt",
+            qty: row.qty,
+            price: row.price ?? 0,
+            ...fnoField,
+          });
+        }
+      });
+    }
+    // Add BUNDLE purchases (ensure item_type/item not null, always pass fno if exists)
+    if (Array.isArray(bundleRows)) {
+      bundleRows.forEach((row) => {
+        if (row && row.qty > 0 && row.model && row.variant) {
+          purchases.push({
+            type: "BUNDLE",
+            item: row.model && row.variant ? row.model + " " + row.variant : "Bundle",
+            qty: row.qty,
+            price: row.price ?? 0,
+            ...fnoField,
+          });
+        }
+      });
+    }
+    // Log fno and purchases payload
+    console.log("FNO for merch purchase:", fno);
+    console.log("Submitting merch purchases (full payload):", purchases);
+    try {
+      // If fno exists, also update participant with fno (log it)
+      if (fno) {
+        console.log("Updating participant with fno:", "F" + fno);
+        // Example: you might want to POST to /api/participant-update or similar.
+        // Uncomment and adjust as needed:
+        // await fetch("/api/participant-update", {
+        //   method: "POST",
+        //   headers: { "Content-Type": "application/json" },
+        //   body: JSON.stringify({ fno: "F" + fno })
+        // });
+      }
+      const requestBody = JSON.stringify({ purchases });
+      console.log("Raw request body for /api/merch-purchase:", requestBody);
+      const res = await fetch("/api/merch-purchase", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: requestBody,
+      });
+      if (!res.ok) {
+        const txt = await res.text();
+        console.error("Merch purchase error:", txt);
+        return;
+      }
+      console.log("Merch purchase successful");
+      onClose();
+    } catch (err) {
+      console.error("Merch purchase error:", err);
+    }
+  };
 
   return (
     <AnimatePresence mode="wait">
@@ -203,184 +287,234 @@ export default function AdminApp({ isOpen, onClose }: AdminAppProps) {
               alignItems: "center",
               borderTopLeftRadius: "40px",
               borderTopRightRadius: "40px",
+              maxHeight: "90vh",
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Heading */}
-            <h3
-              style={{
-                textAlign: "center",
-                fontSize: "28px",
-                fontWeight: 700,
-                marginBottom: -10,
-                marginTop: -5,
-                color: "#000",
-              }}
-            >
-              ENTER FNO
-            </h3>
-            {/* Instruction text */}
-            <p
-              style={{
-                textAlign: "center",
-                fontSize: "14px",
-                marginBottom: "24px",
-                color: "#6d6d6dff",
-              }}
-            >
-              Enter the FNO. Gift status will show automatically.
-            </p>
-
-            {/* Separate F prefix and input */}
-            <div
-              className="font-dragracing"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                marginBottom: "24px",
-                width: "180px",
-                maxWidth: "300px",
-              }}
-            >
-              <span
+            {/* Scrollable content */}
+            <div style={{ flex: 1, overflowY: "auto", paddingBottom: 100, width: "100%" }}>
+              {/* Heading */}
+              <h3
                 style={{
-                  color: fColor,
-                  fontWeight: "700",
-                  fontSize: "24px",
-                  fontFamily: "'Drag Racing', cursive",
-                  userSelect: "none",
-                  marginRight: "22px",
+                  textAlign: "center",
+                  fontSize: "28px",
+                  fontWeight: 700,
+                  marginBottom: -10,
+                  marginTop: -5,
+                  color: "#000",
                 }}
               >
-                F
-              </span>
-              <input
-                type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                placeholder={isFocused || fno !== "" ? "" : "10000"}
-                maxLength={5}
-                value={fno}
-                onChange={(e) => {
-                  // Only allow numbers
-                  const val = e.target.value.replace(/[^0-9]/g, "");
-                  setFno(val);
-                }}
-                onFocus={() => setIsFocused(true)}
-                onBlur={() => setIsFocused(false)}
+                ENTER FNO
+              </h3>
+              {/* Instruction text */}
+              <p
                 style={{
-                  flexGrow: 1,
-                  border: `1.5px solid ${inputBorder}`,
-                  borderRadius: "16px",
-                  padding: "10px 16px",
-                  fontSize: "28px",
-                  fontWeight: "600",
-                  fontFamily: "inherit",
-                  backgroundColor: inputBg,
-                  outline: "none",
                   textAlign: "center",
-                  color: inputBorder,
-                  justifyContent: "center",
-                  width: 50,
+                  fontSize: "14px",
+                  marginBottom: "24px",
+                  color: "#6d6d6dff",
                 }}
-              />
-            </div>
+              >
+                Enter the FNO. Gift status will show automatically.
+              </p>
 
-            {/* Horizontal divider line */}
-            <div style={{ borderTop: "4px solid #EEEEEE", width: "95%" }} />
-
-            {/* --- T‑SHIRT SECTION (single row design) --- */}
-            <TShirtRow />
-
-            {/* Divider line */}
-            <div style={{ borderTop: "4px solid #EEEEEE", width: "95%", margin: "16px 0" }} />
-
-            {/* CAP Section */}
-            <div style={{ width: "100%", marginTop: 8 }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-                <div style={{ paddingLeft: "8px", color: "#111", fontWeight: 800, fontSize: 18, letterSpacing: 0.2 }}>CAP</div>
-                <div style={{
-                  background: "#F4EDFF",
-                  color: "#6B6B6B",
-                  fontWeight: 600,
-                  borderRadius: 28,
-                  padding: "10px 8px",
-                  fontSize: 14,
-                  display: "inline-flex",
-                  alignItems: "center",
+              {/* Separate F prefix and input */}
+              <div
+                className="font-dragracing"
+                style={{
+                  display: "flex",
                   justifyContent: "center",
-                  minWidth: 110
-                }}>
-                  $0.00
+                  alignItems: "center",
+                  marginBottom: "24px",
+                  width: "100%",
+                  maxWidth: "300px",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    gap: "12px",
+                    width: "100%",
+                  }}
+                >
+                  <span
+                    style={{
+                      color: fColor,
+                      fontWeight: "700",
+                      fontSize: "24px",
+                      fontFamily: "'Drag Racing', cursive",
+                      userSelect: "none",
+                    }}
+                  >
+                    F
+                  </span>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    placeholder={isFocused || fno !== "" ? "" : "10000"}
+                    maxLength={5}
+                    value={fno}
+                    onChange={(e) => {
+                      // Only allow numbers
+                      const val = e.target.value.replace(/[^0-9]/g, "");
+                      setFno(val);
+                    }}
+                    onFocus={() => setIsFocused(true)}
+                    onBlur={() => setIsFocused(false)}
+                    style={{
+                      flexGrow: 1,
+                      border: `1.5px solid ${inputBorder}`,
+                      borderRadius: "16px",
+                      padding: "10px 16px",
+                      fontSize: "28px",
+                      fontWeight: "600",
+                      fontFamily: "inherit",
+                      backgroundColor: inputBg,
+                      outline: "none",
+                      textAlign: "center",
+                      color: inputBorder,
+                      justifyContent: "center",
+                      width: 50,
+                    }}
+                  />
                 </div>
               </div>
-              <input
-                type="number"
-                min={0}
-                placeholder="QTY"
-                style={{
-                  width: "90%",
-                  height: 50,
-                  borderRadius: 14,
-                  border: "1.5px solid #E6E6EA",
-                  padding: "0 18px",
-                  fontSize: 14,
-                  textAlign: "center",
-                  background: "#fff",
-                  boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
-                  fontWeight: 500,
-                  color: "#222"
-                }}
-              />
-            </div>
 
-            {/* Divider after CAP */}
-            <div style={{ borderTop: "4px solid #EEEEEE", width: "95%", margin: "16px 0" }} />
+              {/* Horizontal divider line */}
+              <div style={{ borderTop: "4px solid #EEEEEE", width: "95%" }} />
 
-            {/* TUMBLER Section */}
-            <div style={{ width: "100%", marginTop: 8 }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-                <div style={{ paddingLeft: "8px", color: "#111", fontWeight: 800, fontSize: 18, letterSpacing: 0.2 }}>TUMBLER</div>
-                <div style={{
-                  background: "#F4EDFF",
-                  color: "#6B6B6B",
-                  fontWeight: 600,
-                  borderRadius: 28,
-                  padding: "10px 8px",
-                  fontSize: 14,
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  minWidth: 110
-                }}>
-                  $0.00
+              {/* --- T‑SHIRT SECTION (single row design) --- */}
+              <TShirtRow onTotalChange={setTshirtTotal} />
+
+              {/* Divider line */}
+              <div style={{ borderTop: "4px solid #EEEEEE", width: "95%", margin: "16px 0" }} />
+
+              {/* CAP Section */}
+              <div style={{ width: "100%", marginTop: 8 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                  <div style={{ paddingLeft: "8px", color: "#111", fontWeight: 800, fontSize: 18, letterSpacing: 0.2 }}>CAP</div>
+                  <div style={{
+                    background: "#F4EDFF",
+                    color: "#6B6B6B",
+                    fontWeight: 600,
+                    borderRadius: 28,
+                    padding: "10px 8px",
+                    fontSize: 14,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    minWidth: 110
+                  }}>
+                    ${ (capQty * capPrice).toFixed(2) }
+                  </div>
                 </div>
+                <input
+                  type="number"
+                  min={0}
+                  value={capQty === 0 ? "" : capQty}
+                  onChange={e => {
+                    const val = e.target.value;
+                    setCapQty(val === "" ? 0 : Math.max(0, Number(val)));
+                  }}
+                  placeholder="QTY"
+                  style={{
+                    width: "90%",
+                    height: 50,
+                    borderRadius: 14,
+                    border: "1.5px solid #E6E6EA",
+                    padding: "0 18px",
+                    fontSize: 14,
+                    textAlign: "center",
+                    background: "#fff",
+                    boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
+                    fontWeight: 500,
+                    color: "#222"
+                  }}
+                />
               </div>
-              <input
-                type="number"
-                min={0}
-                placeholder="QTY"
-                style={{
-                  width: "90%",
-                  height: 50,
-                  borderRadius: 14,
-                  border: "1.5px solid #E6E6EA",
-                  padding: "0 18px",
-                  fontSize: 14,
-                  textAlign: "center",
-                  background: "#fff",
-                  boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
-                  fontWeight: 500,
-                  color: "#222"
-                }}
-              />
+
+              {/* Divider after CAP */}
+              <div style={{ borderTop: "4px solid #EEEEEE", width: "95%", margin: "16px 0" }} />
+
+              {/* TUMBLER Section */}
+              <div style={{ width: "100%", marginTop: 8 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                  <div style={{ paddingLeft: "8px", color: "#111", fontWeight: 800, fontSize: 18, letterSpacing: 0.2 }}>TUMBLER</div>
+                  <div style={{
+                    background: "#F4EDFF",
+                    color: "#6B6B6B",
+                    fontWeight: 600,
+                    borderRadius: 28,
+                    padding: "10px 8px",
+                    fontSize: 14,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    minWidth: 110
+                  }}>
+                    ${ (tumblerQty * tumblerPrice).toFixed(2) }
+                  </div>
+                </div>
+                <input
+                  type="number"
+                  min={0}
+                  value={tumblerQty === 0 ? "" : tumblerQty}
+                  onChange={e => {
+                    const val = e.target.value;
+                    setTumblerQty(val === "" ? 0 : Math.max(0, Number(val)));
+                  }}
+                  placeholder="QTY"
+                  style={{
+                    width: "90%",
+                    height: 50,
+                    borderRadius: 14,
+                    border: "1.5px solid #E6E6EA",
+                    padding: "0 18px",
+                    fontSize: 14,
+                    textAlign: "center",
+                    background: "#fff",
+                    boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
+                    fontWeight: 500,
+                    color: "#222"
+                  }}
+                />
+              </div>
+
+              {/* Divider after TUMBLER */}
+              <div style={{ borderTop: "4px solid #EEEEEE", width: "95%", margin: "16px 0" }} />
+
+              {/* BUNDLES Section */}
+              <BundleRow onTotalChange={setBundleTotal} />
             </div>
-
-            {/* Divider after TUMBLER */}
-            <div style={{ borderTop: "4px solid #EEEEEE", width: "95%", margin: "16px 0" }} />
-
-            {/* BUNDLES Section */}
-            <BundleRow />
+            {/* Sticky footer */}
+            <div style={{ position: "sticky", bottom: 0, background: "#fafafa", paddingTop: 16, borderTop: "2px solid #EAEAEA", width: "100%", zIndex: 10 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                <span style={{ fontFamily: "'Drag Racing', cursive", fontWeight: 700, fontSize: 22, color: "#555" }}>TOTAL TO PAY</span>
+                <span style={{ fontFamily: "'Drag Racing', cursive", fontWeight: 700, fontSize: 22, color: "#555" }}>${totalToPay.toFixed(2)}</span>
+              </div>
+              <button
+                type="button"
+                style={{
+                  width: "100%",
+                  backgroundColor: "#000",
+                  color: "#fff",
+                  fontFamily: "'Drag Racing', cursive",
+                  fontWeight: "700",
+                  fontSize: 24,
+                  padding: "16px 0",
+                  borderRadius: 100,
+                  cursor: "pointer",
+                  border: "none",
+                  marginBottom: 0,
+                }}
+                onClick={handlePay}
+              >
+                PAY
+              </button>
+            </div>
           </motion.div>
         </motion.div>
       )}
@@ -531,254 +665,285 @@ function MerchPurchase() {
   const totalToPay = tshirtTotal + capTotal + tumblerTotal + bundleTotal;
 
   return (
-    <div style={{ paddingLeft: 20, width: "100%", maxWidth: 460, display: "flex", flexDirection: "column", gap: 20 }}>
-      {/* T-SHIRT row */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-        <label style={{ color: "#000", fontWeight: 600, fontSize: 16, minWidth: 80 }}>T-SHIRT</label>
-        <div style={{ flexGrow: 1 }}>
-          {tshirtDropdowns.map((dropdown, idx) => (
-            <div key={idx} style={{ display: "flex", alignItems: "center", marginBottom: idx < tshirtDropdowns.length - 1 ? 6 : 0 }}>
-              <select
-                value={dropdown.value}
-                onChange={(e) => {
-                  handleTshirtDropdownChange(idx, e.target.value);
-                }}
-                style={{
-                  borderRadius: 8,
-                  padding: "6px 8px",
-                  fontSize: 14,
-                  fontFamily: "inherit",
-                  border: "1px solid #ccc",
-                  cursor: "pointer",
-                  marginRight: 8,
-                  minWidth: 100,
-                }}
-              >
-                {tshirtOptions.map((opt) => (
-                  <option
-                    key={opt}
-                    value={opt}
-                    disabled={tshirtSelected.includes(opt) && dropdown.value !== opt}
-                  >
-                    {opt}
-                  </option>
-                ))}
-              </select>
-              <input
-                type="number"
-                min={0}
-                value={tshirtQtys[idx] || 0}
-                onChange={(e) => {
-                  const val = Math.max(0, Number(e.target.value));
-                  setTshirtQtys((prev) => {
-                    const arr = [...prev];
-                    arr[idx] = val;
-                    return arr;
-                  });
-                }}
-                style={{
-                  width: 50,
-                  marginRight: 2,
-                  borderRadius: 8,
-                  padding: "6px 8px",
-                  fontSize: 14,
-                  fontFamily: "inherit",
-                  border: "1px solid #ccc",
-                  textAlign: "center",
-                }}
-              />
-              <span style={{ fontWeight: 600, fontSize: 14, minWidth: 60, textAlign: "right" }}>
-                ${(tshirtPrices[dropdown.value] * (tshirtQtys[idx] || 0)).toFixed(2)}
-              </span>
-            </div>
-          ))}
-        </div>
-        <button
-          onClick={handleTshirtToggle}
-          style={{
-            backgroundColor: "#5823e9ff",
-            color: "#fff",
-            border: "none",
-            borderRadius: "9999px",
-            width: 30,
-            height: 30,
-            fontWeight: "700",
-            fontSize: 20,
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            marginLeft: 4,
-          }}
-          type="button"
-        >
-          {tshirtExpanded ? "−" : "+"}
-        </button>
-        <div style={{ minWidth: 70, textAlign: "right", fontWeight: 600, fontSize: 16 }}>
-          ${tshirtTotal.toFixed(2)}
-        </div>
-      </div>
-      {/* CAP row */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <label style={{ fontWeight: 600, fontSize: 16, minWidth: 80 }}>CAP</label>
-        <div style={{ flexGrow: 1, marginRight: 12 }} />
-        <input
-          type="number"
-          min={0}
-          value={capQty}
-          onChange={(e) => setCapQty(Math.max(0, Number(e.target.value)))}
-          style={{
-            width: 50,
-            marginRight: 8,
-            borderRadius: 8,
-            padding: "6px 8px",
-            fontSize: 14,
-            fontFamily: "inherit",
-            border: "1px solid #ccc",
-            textAlign: "center",
-          }}
-        />
-        <div style={{ minWidth: 70, textAlign: "right", fontWeight: 600, fontSize: 16 }}>${capTotal.toFixed(2)}</div>
-      </div>
-      {/* TUMBLER row */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <label style={{ fontWeight: 600, fontSize: 16, minWidth: 80 }}>TUMBLER</label>
-        <div style={{ flexGrow: 1, marginRight: 12 }} />
-        <input
-          type="number"
-          min={0}
-          value={tumblerQty}
-          onChange={(e) => setTumblerQty(Math.max(0, Number(e.target.value)))}
-          style={{
-            width: 50,
-            marginRight: 8,
-            borderRadius: 8,
-            padding: "6px 8px",
-            fontSize: 14,
-            fontFamily: "inherit",
-            border: "1px solid #ccc",
-            textAlign: "center",
-          }}
-        />
-        <div style={{ minWidth: 70, textAlign: "right", fontWeight: 600, fontSize: 16 }}>${tumblerTotal.toFixed(2)}</div>
-      </div>
-      {/* BUNDLE DEAL row */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-        <label style={{ fontWeight: 600, fontSize: 16, minWidth: 80 }}>BUNDLE DEAL</label>
-        <div style={{ flexGrow: 1 }}>
-          {bundleDropdowns.map((dropdown, idx) => (
-            <div key={idx} style={{ display: "flex", alignItems: "center", marginBottom: idx < bundleDropdowns.length - 1 ? 6 : 0 }}>
-              <select
-                value={dropdown.value}
-                onChange={(e) => {
-                  handleBundleDropdownChange(idx, e.target.value);
-                }}
-                style={{
-                  borderRadius: 8,
-                  padding: "6px 8px",
-                  fontSize: 14,
-                  fontFamily: "inherit",
-                  border: "1px solid #ccc",
-                  cursor: "pointer",
-                  marginRight: 8,
-                  minWidth: 100,
-                }}
-              >
-                {bundleOptions.map((opt) => (
-                  <option
-                    key={opt}
-                    value={opt}
-                    disabled={bundleSelected.includes(opt) && dropdown.value !== opt}
-                  >
-                    {opt}
-                  </option>
-                ))}
-              </select>
-              <input
-                type="number"
-                min={0}
-                value={bundleQtys[idx] || 0}
-                onChange={(e) => {
-                  const val = Math.max(0, Number(e.target.value));
-                  setBundleQtys((prev) => {
-                    const arr = [...prev];
-                    arr[idx] = val;
-                    return arr;
-                  });
-                }}
-                style={{
-                  width: 50,
-                  marginRight: 2,
-                  borderRadius: 8,
-                  padding: "6px 8px",
-                  fontSize: 14,
-                  fontFamily: "inherit",
-                  border: "1px solid #ccc",
-                  textAlign: "center",
-                }}
-              />
-              <span style={{ fontWeight: 600, fontSize: 14, minWidth: 60, textAlign: "right" }}>
-                ${(bundlePrices[dropdown.value] * (bundleQtys[idx] || 0)).toFixed(2)}
-              </span>
-            </div>
-          ))}
-        </div>
-        <button
-          onClick={handleBundleToggle}
-          style={{
-            backgroundColor: "#5823e9ff",
-            color: "#fff",
-            border: "none",
-            borderRadius: "9999px",
-            width: 30,
-            height: 30,
-            fontWeight: "700",
-            fontSize: 20,
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            marginLeft: 4,
-          }}
-          type="button"
-        >
-          {bundleExpanded ? "−" : "+"}
-        </button>
-        <div style={{ minWidth: 70, textAlign: "right", fontWeight: 600, fontSize: 16 }}>
-          ${bundleTotal.toFixed(2)}
-        </div>
-      </div>
-      {/* Divider line */}
-      <div style={{ borderTop: "4px solid #EEEEEE", margin: "20px 0", width: "100%" }} />
-      {/* Total and Pay button */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-        <span style={{ fontWeight: 700, fontSize: 18 }}>TOTAL TO PAY</span>
-        <span style={{ fontWeight: 700, fontSize: 18 }}>${totalToPay.toFixed(2)}</span>
-      </div>
-      <button
-        type="button"
+    <div
+      style={{
+        paddingLeft: 20,
+        width: "100%",
+        maxWidth: 460,
+        display: "flex",
+        flexDirection: "column",
+        gap: 0,
+        
+      }}
+    >
+      {/* Scrollable content container */}
+      <div
         style={{
-          width: "100%",
-          backgroundColor: "#000",
-          color: "#fff",
-          fontFamily: "'Drag Racing', cursive",
-          fontWeight: "700",
-          fontSize: 24,
-          padding: "14px 0",
-          borderRadius: 16,
-          cursor: "pointer",
-          border: "none",
+          display: "flex",
+          flexDirection: "column",
+          gap: 20,
+          maxHeight: "70vh",
+          overflowY: "scroll",
+          paddingRight: 8,
         }}
       >
-        PAY
-      </button>
+        {/* T-SHIRT row */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+          <label style={{ color: "#000", fontWeight: 600, fontSize: 16, minWidth: 80 }}>T-SHIRT</label>
+          <div style={{ flexGrow: 1 }}>
+            {tshirtDropdowns.map((dropdown, idx) => (
+              <div key={idx} style={{ display: "flex", alignItems: "center", marginBottom: idx < tshirtDropdowns.length - 1 ? 6 : 0 }}>
+                <select
+                  value={dropdown.value}
+                  onChange={(e) => {
+                    handleTshirtDropdownChange(idx, e.target.value);
+                  }}
+                  style={{
+                    borderRadius: 8,
+                    padding: "6px 8px",
+                    fontSize: 14,
+                    fontFamily: "inherit",
+                    border: "1px solid #ccc",
+                    cursor: "pointer",
+                    marginRight: 8,
+                    minWidth: 100,
+                  }}
+                >
+                  {tshirtOptions.map((opt) => (
+                    <option
+                      key={opt}
+                      value={opt}
+                      disabled={tshirtSelected.includes(opt) && dropdown.value !== opt}
+                    >
+                      {opt}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="number"
+                  min={0}
+                  value={tshirtQtys[idx] || 0}
+                  onChange={(e) => {
+                    const val = Math.max(0, Number(e.target.value));
+                    setTshirtQtys((prev) => {
+                      const arr = [...prev];
+                      arr[idx] = val;
+                      return arr;
+                    });
+                  }}
+                  style={{
+                    width: 50,
+                    marginRight: 2,
+                    borderRadius: 8,
+                    padding: "6px 8px",
+                    fontSize: 14,
+                    fontFamily: "inherit",
+                    border: "1px solid #ccc",
+                    textAlign: "center",
+                  }}
+                />
+                <span style={{ fontWeight: 600, fontSize: 14, minWidth: 60, textAlign: "right" }}>
+                  ${(tshirtPrices[dropdown.value] * (tshirtQtys[idx] || 0)).toFixed(2)}
+                </span>
+              </div>
+            ))}
+          </div>
+          <button
+            onClick={handleTshirtToggle}
+            style={{
+              backgroundColor: "#5823e9ff",
+              color: "#fff",
+              border: "none",
+              borderRadius: "9999px",
+              width: 30,
+              height: 30,
+              fontWeight: "700",
+              fontSize: 20,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              marginLeft: 4,
+            }}
+            type="button"
+          >
+            {tshirtExpanded ? "−" : "+"}
+          </button>
+          <div style={{ minWidth: 70, textAlign: "right", fontWeight: 600, fontSize: 16 }}>
+            ${tshirtTotal.toFixed(2)}
+          </div>
+        </div>
+        {/* CAP row */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <label style={{ fontWeight: 600, fontSize: 16, minWidth: 80 }}>CAP</label>
+          <div style={{ flexGrow: 1, marginRight: 12 }} />
+            <input
+              type="number"
+              min={0}
+              value={capQty === 0 ? "" : capQty}
+              onChange={(e) => {
+                const val = e.target.value;
+                setCapQty(val === "" ? 0 : Math.max(0, Number(val)));
+              }}
+              style={{
+                width: 50,
+                marginRight: 8,
+                borderRadius: 8,
+                padding: "6px 8px",
+                fontSize: 14,
+                fontFamily: "inherit",
+                border: "1px solid #ccc",
+                textAlign: "center",
+              }}
+            />
+          <div style={{ minWidth: 70, textAlign: "right", fontWeight: 600, fontSize: 16 }}>${capTotal.toFixed(2)}</div>
+        </div>
+        {/* TUMBLER row */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <label style={{ fontWeight: 600, fontSize: 16, minWidth: 80 }}>TUMBLER</label>
+          <div style={{ flexGrow: 1, marginRight: 12 }} />
+            <input
+              type="number"
+              min={0}
+              value={tumblerQty === 0 ? "" : tumblerQty}
+              onChange={(e) => {
+                const val = e.target.value;
+                setTumblerQty(val === "" ? 0 : Math.max(0, Number(val)));
+              }}
+              style={{
+                width: 50,
+                marginRight: 8,
+                borderRadius: 8,
+                padding: "6px 8px",
+                fontSize: 14,
+                fontFamily: "inherit",
+                border: "1px solid #ccc",
+                textAlign: "center",
+              }}
+            />
+          <div style={{ minWidth: 70, textAlign: "right", fontWeight: 600, fontSize: 16 }}>${tumblerTotal.toFixed(2)}</div>
+        </div>
+        {/* BUNDLE DEAL row */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+          <label style={{ fontWeight: 600, fontSize: 16, minWidth: 80 }}>BUNDLE DEAL</label>
+          <div style={{ flexGrow: 1 }}>
+            {bundleDropdowns.map((dropdown, idx) => (
+              <div key={idx} style={{ display: "flex", alignItems: "center", marginBottom: idx < bundleDropdowns.length - 1 ? 6 : 0 }}>
+                <select
+                  value={dropdown.value}
+                  onChange={(e) => {
+                    handleBundleDropdownChange(idx, e.target.value);
+                  }}
+                  style={{
+                    borderRadius: 8,
+                    padding: "6px 8px",
+                    fontSize: 14,
+                    fontFamily: "inherit",
+                    border: "1px solid #ccc",
+                    cursor: "pointer",
+                    marginRight: 8,
+                    minWidth: 100,
+                  }}
+                >
+                  {bundleOptions.map((opt) => (
+                    <option
+                      key={opt}
+                      value={opt}
+                      disabled={bundleSelected.includes(opt) && dropdown.value !== opt}
+                    >
+                      {opt}
+                    </option>
+                  ))}
+                </select>
+            <input
+              type="number"
+              min={0}
+              value={bundleQtys[idx] === 0 ? "" : bundleQtys[idx]}
+              onChange={(e) => {
+                const val = e.target.value;
+                setBundleQtys((prev) => {
+                  const arr = [...prev];
+                  arr[idx] = val === "" ? 0 : Math.max(0, Number(val));
+                  return arr;
+                });
+              }}
+              style={{
+                width: 50,
+                marginRight: 2,
+                borderRadius: 8,
+                padding: "6px 8px",
+                fontSize: 14,
+                fontFamily: "inherit",
+                border: "1px solid #ccc",
+                textAlign: "center",
+              }}
+            />
+                <span style={{ fontWeight: 600, fontSize: 14, minWidth: 60, textAlign: "right" }}>
+                  ${(bundlePrices[dropdown.value] * (bundleQtys[idx] || 0)).toFixed(2)}
+                </span>
+              </div>
+            ))}
+          </div>
+          <button
+            onClick={handleBundleToggle}
+            style={{
+              backgroundColor: "#5823e9ff",
+              color: "#fff",
+              border: "none",
+              borderRadius: "9999px",
+              width: 30,
+              height: 30,
+              fontWeight: "700",
+              fontSize: 20,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              marginLeft: 4,
+            }}
+            type="button"
+          >
+            {bundleExpanded ? "−" : "+"}
+          </button>
+          <div style={{ minWidth: 70, textAlign: "right", fontWeight: 600, fontSize: 16 }}>
+            ${bundleTotal.toFixed(2)}
+          </div>
+        </div>
+      </div>
+      {/* Sticky footer with divider, total, divider, and pay button */}
+      <div style={{ position: "sticky", bottom: 0, background: "#fff", paddingTop: 16, zIndex: 10 }}>
+        <div style={{ borderTop: "2px solid #EAEAEA", width: "100%", marginBottom: 16 }} />
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+          <span style={{ fontFamily: "'Drag Racing', cursive", fontWeight: 700, fontSize: 22, color: "#555" }}>TOTAL TO PAY</span>
+          <span style={{ fontFamily: "'Drag Racing', cursive", fontWeight: 700, fontSize: 22, color: "#555" }}>${totalToPay.toFixed(2)}</span>
+        </div>
+        <div style={{ borderTop: "2px solid #EAEAEA", width: "100%", marginBottom: 16 }} />
+        <button
+          type="button"
+          style={{
+            width: "100%",
+            backgroundColor: "#000",
+            color: "#fff",
+            fontFamily: "'Drag Racing', cursive",
+            fontWeight: "700",
+            fontSize: 24,
+            padding: "16px 0",
+            borderRadius: 100,
+            cursor: "pointer",
+            border: "none",
+          }}
+        >
+          PAY
+        </button>
+      </div>
     </div>
   );
 }
 
 /** Multi-row T‑SHIRT selection: model/variant/qty, plus/minus row controls */
-function TShirtRow() {
+function TShirtRow({ onTotalChange }: { onTotalChange: (val: number) => void }) {
   // Options: object with model keys, each with array of variant objects
+  // Updated price values:
   const options: Record<
     string,
     { label: string; price: number }[]
@@ -804,15 +969,14 @@ function TShirtRow() {
     }
     return 0;
   }
-  // Helper: check how many main models are used
-  function selectedModelsCount() {
-    // Only count non-empty model values, unique
-    return Array.from(new Set(rows.map(r => r.model).filter(Boolean))).length;
+  // Helper: count total number of rows (max is number of all variants, i.e. 4)
+  function totalVariantsCount() {
+    // 2 models, each 2 variants: 4 total
+    return Object.values(options).reduce((sum, arr) => sum + arr.length, 0);
   }
-
-  // Add a new row (if less than 2 main models used)
+  // Add a new row (if less than 4 rows)
   function handleAddRow() {
-    if (selectedModelsCount() < Object.keys(options).length) {
+    if (rows.length < totalVariantsCount()) {
       setRows((prev) => [...prev, { model: "", variant: "", qty: 0 }]);
     }
   }
@@ -845,6 +1009,18 @@ function TShirtRow() {
   // Total for each row and overall
   const lineTotals = rows.map(r => getPrice(r.model, r.variant) * r.qty);
   const overallTotal = lineTotals.reduce((a, b) => a + b, 0);
+
+  // Expose rows to window for AdminApp to collect purchases
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      (window as any).__tshirtRows = rows.map(r => ({
+        ...r,
+        price: getPrice(r.model, r.variant),
+      }));
+    }
+    onTotalChange(overallTotal);
+    // eslint-disable-next-line
+  }, [rows, overallTotal, onTotalChange]);
 
   const pill = {
     background: "#F4EDFF",
@@ -921,18 +1097,22 @@ function TShirtRow() {
                 <option value="" disabled hidden>
                   Select Model
                 </option>
-                {Object.keys(options).map((m) => (
-                  <option
-                    key={m}
-                    value={m}
-                    disabled={
-                      // Disable if already selected in another row
-                      rows.some((r, i) => i !== idx && r.model === m)
-                    }
-                  >
-                    {m}
-                  </option>
-                ))}
+                {Object.keys(options).map((m) => {
+                  const variants = options[m];
+                  // Find all variants for this model that are selected in other rows
+                  const selectedVariants = rows.filter(r => r.model === m && r.variant).map(r => r.variant);
+                  // If all variants for this model are already selected in other rows, disable this model (unless this row is using it)
+                  const allUsed = variants.every(v => selectedVariants.includes(v.label));
+                  return (
+                    <option
+                      key={m}
+                      value={m}
+                      disabled={allUsed && row.model !== m}
+                    >
+                      {m}
+                    </option>
+                  );
+                })}
               </select>
               {/* Chevron */}
               <span
@@ -1010,11 +1190,16 @@ function TShirtRow() {
                   <option value="" disabled hidden>
                     Select Variant
                   </option>
-                  {options[row.model].map((v) => (
-                    <option key={v.label} value={v.label}>
-                      {v.label}
-                    </option>
-                  ))}
+                  {options[row.model].map((v) => {
+                    const otherSelected = rows
+                      .filter((r, i) => i !== idx && r.model === row.model && r.variant)
+                      .map((r) => r.variant);
+                    return (
+                      <option key={v.label} value={v.label} disabled={otherSelected.includes(v.label)}>
+                        {v.label}
+                      </option>
+                    );
+                  })}
                 </select>
                 {/* Chevron */}
                 <span
@@ -1053,8 +1238,12 @@ function TShirtRow() {
             <input
               type="number"
               min={0}
-              value={row.qty}
-              onChange={(e) => updateRow(idx, "qty", e.target.value)}
+              value={row.qty === 0 ? "" : row.qty}
+              onChange={(e) => {
+                // If field is cleared, set qty to 0; else parse as number
+                const val = e.target.value;
+                updateRow(idx, "qty", val === "" ? 0 : val);
+              }}
               placeholder="QTY"
               style={{
                 height: 50,
@@ -1073,7 +1262,13 @@ function TShirtRow() {
             {/* Plus or minus button */}
             <button
               type="button"
-              aria-label={rows.length > 1 ? "remove tee row" : "add tee row"}
+              aria-label={
+                idx === rows.length - 1 && rows.length < totalVariantsCount()
+                  ? "add tee row"
+                  : rows.length > 1
+                  ? "remove tee row"
+                  : "remove tee row"
+              }
               style={{
                 height: 28,
                 width: 28,
@@ -1090,62 +1285,48 @@ function TShirtRow() {
                 fontWeight: 700,
               }}
               onClick={() => {
-                if (rows.length > 1) {
-                  handleRemoveRow(idx);
-                } else if (idx === rows.length - 1 && selectedModelsCount() < Object.keys(options).length) {
+                if (idx === rows.length - 1 && rows.length < totalVariantsCount()) {
                   handleAddRow();
+                } else if (rows.length > 1) {
+                  handleRemoveRow(idx);
                 }
               }}
             >
-              {rows.length > 1 ? "−" : idx === rows.length - 1 && selectedModelsCount() < Object.keys(options).length ? "+" : "+"}
+              {idx === rows.length - 1 && rows.length < totalVariantsCount()
+                ? "+"
+                : rows.length > 1
+                ? "−"
+                : ""}
             </button>
           </div>
-          {/* Row total pill */}
-          <div style={{ fontSize: 13, fontWeight: 400, color: "#888", marginLeft: 8, marginTop: 2 }}>
-            {row.model && row.variant && row.qty > 0 && (
-              <span style={{
-                ...pill,
-                background: "#f7f7f7",
-                color: "#6B6B6B",
-                fontSize: 13,
-                minWidth: 68,
-                padding: "7px 8px",
-                marginTop: 4,
-                marginLeft: 0,
-                marginBottom: 0,
-                fontWeight: 500,
-              }}>
-                ${(getPrice(row.model, row.variant) * row.qty).toFixed(2)}
-              </span>
-            )}
-          </div>
+          {/* Row total pill removed */}
         </div>
       ))}
     </div>
   );
 }
 // Multi-row BUNDLE selection: 4 bundle types, each with options inside
-function BundleRow() {
+function BundleRow({ onTotalChange }: { onTotalChange: (val: number) => void }) {
   // Four bundle categories, each with variants and prices
+  // Updated bundle prices per instructions:
   const options: Record<
     string,
-    { label: string; price: number }[]
+    { label: string; price: number; value: string }[]
   > = {
-    "Bundle A": [
-      { label: "Starter", price: 55 },
-      { label: "Pro", price: 65 },
+    "RACE": [
+      { label: "Option 1 - $55", price: 55, value: "Option 1 - $55" },
+      { label: "Option 2 - $50", price: 50, value: "Option 2 - $50" },
     ],
-    "Bundle B": [
-      { label: "Basic", price: 60 },
-      { label: "Elite", price: 75 },
+    "HYDRATION": [
+      { label: "Option 1 - $58", price: 58, value: "Option 1 - $58" },
+      { label: "Option 2 - $53", price: 53, value: "Option 2 - $53" },
     ],
-    "Bundle C": [
-      { label: "Family", price: 90 },
-      { label: "Friends", price: 95 },
+    "FUEL": [
+      { label: "Option 1 - $50", price: 50, value: "Option 1 - $50" },
     ],
-    "Bundle D": [
-      { label: "Solo", price: 45 },
-      { label: "Duo", price: 80 },
+    "INNERDRIVE™": [
+      { label: "Option 1 - $80", price: 80, value: "Option 1 - $80" },
+      { label: "Option 2 - $75", price: 75, value: "Option 2 - $75" },
     ],
   };
   // State: array of { model, variant, qty }
@@ -1155,16 +1336,17 @@ function BundleRow() {
 
   function getPrice(model: string, variant: string) {
     if (model && variant) {
-      return options[model]?.find((v) => v.label === variant)?.price ?? 0;
+      return options[model]?.find((v) => v.value === variant)?.price ?? 0;
     }
     return 0;
   }
-  function selectedModelsCount() {
-    return Array.from(new Set(rows.map(r => r.model).filter(Boolean))).length;
+  // Compute the total number of variants across all bundle models
+  function totalVariantsCount() {
+    return Object.values(options).reduce((sum, arr) => sum + arr.length, 0);
   }
-  // Add a new row (if less than 4 main models used)
+  // Add a new row (if total rows is less than total variants)
   function handleAddRow() {
-    if (selectedModelsCount() < Object.keys(options).length) {
+    if (rows.length < totalVariantsCount()) {
       setRows((prev) => [...prev, { model: "", variant: "", qty: 0 }]);
     }
   }
@@ -1179,7 +1361,7 @@ function BundleRow() {
         arr[idx] = { model: selectedModel, variant: "", qty: arr[idx].qty };
         const variants = options[selectedModel] || [];
         if (variants.length === 1) {
-          arr[idx].variant = variants[0].label;
+          arr[idx].variant = variants[0].value;
         }
       } else if (field === "variant") {
         arr[idx] = { ...arr[idx], variant: value as string };
@@ -1191,6 +1373,18 @@ function BundleRow() {
   }
   const lineTotals = rows.map(r => getPrice(r.model, r.variant) * r.qty);
   const overallTotal = lineTotals.reduce((a, b) => a + b, 0);
+
+  // Expose rows to window for AdminApp to collect purchases
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      (window as any).__bundleRows = rows.map(r => ({
+        ...r,
+        price: getPrice(r.model, r.variant),
+      }));
+    }
+    onTotalChange(overallTotal);
+    // eslint-disable-next-line
+  }, [rows, overallTotal, onTotalChange]);
   const pill = {
     background: "#F4EDFF",
     color: "#6B6B6B",
@@ -1227,7 +1421,14 @@ function BundleRow() {
                 letterSpacing: 0.01,
               }}
             >
-              {row.model} &nbsp;|&nbsp; {row.variant}
+              {row.model} &nbsp;|&nbsp; {
+                // Find the label for this variant, but strip price part after " - "
+                (() => {
+                  const label = options[row.model]?.find((v) => v.value === row.variant)?.label || row.variant;
+                  // Remove the price part (e.g., "Option 1 - $55" -> "Option 1")
+                  return label.split(" - ")[0];
+                })()
+              }
             </div>
           )}
           {/* Controls row */}
@@ -1264,17 +1465,24 @@ function BundleRow() {
                 <option value="" disabled hidden>
                   Select Bundle
                 </option>
-                {Object.keys(options).map((m) => (
-                  <option
-                    key={m}
-                    value={m}
-                    disabled={
-                      rows.some((r, i) => i !== idx && r.model === m)
-                    }
-                  >
-                    {m}
-                  </option>
-                ))}
+                {Object.keys(options).map((m) => {
+                  const variants = options[m];
+                  // Find all variants for this model that are selected in other rows
+                  const selectedVariants = rows
+                    .filter((r, i) => i !== idx && r.model === m && r.variant)
+                    .map((r) => r.variant);
+                  // If all variants for this model are already selected in other rows, disable this model (unless this row is using it)
+                  const allUsed = variants.every(v => selectedVariants.includes(v.value));
+                  return (
+                    <option
+                      key={m}
+                      value={m}
+                      disabled={allUsed && row.model !== m}
+                    >
+                      {m}
+                    </option>
+                  );
+                })}
               </select>
               {/* Chevron */}
               <span
@@ -1336,7 +1544,7 @@ function BundleRow() {
                           .filter((r, i) => i !== idx && r.model === row.model && r.variant)
                           .map((r) => r.variant);
                         const available = allVariants
-                          .map((v) => v.label)
+                          .map((v) => v.value)
                           .filter((v) => !otherSelected.includes(v));
                         if (available.length === 1) {
                           updateRow(idx, "variant", available[0]);
@@ -1348,11 +1556,20 @@ function BundleRow() {
                   <option value="" disabled hidden>
                     Select Option
                   </option>
-                  {options[row.model].map((v) => (
-                    <option key={v.label} value={v.label}>
-                      {v.label}
-                    </option>
-                  ))}
+                  {options[row.model].map((v) => {
+                    const otherSelected = rows
+                      .filter((r, i) => i !== idx && r.model === row.model && r.variant)
+                      .map((r) => r.variant);
+                    return (
+                      <option
+                        key={v.value}
+                        value={v.value}
+                        disabled={otherSelected.includes(v.value) && row.variant !== v.value}
+                      >
+                        {v.label}
+                      </option>
+                    );
+                  })}
                 </select>
                 {/* Chevron */}
                 <span
@@ -1391,8 +1608,11 @@ function BundleRow() {
             <input
               type="number"
               min={0}
-              value={row.qty}
-              onChange={(e) => updateRow(idx, "qty", e.target.value)}
+              value={row.qty === 0 ? "" : row.qty}
+              onChange={(e) => {
+                const val = e.target.value;
+                updateRow(idx, "qty", val === "" ? 0 : Math.max(0, Number(val)));
+              }}
               placeholder="QTY"
               style={{
                 height: 50,
@@ -1411,7 +1631,13 @@ function BundleRow() {
             {/* Plus or minus button */}
             <button
               type="button"
-              aria-label={rows.length > 1 ? "remove bundle row" : "add bundle row"}
+              aria-label={
+                idx === rows.length - 1 && rows.length < totalVariantsCount()
+                  ? "add bundle row"
+                  : rows.length > 1
+                  ? "remove bundle row"
+                  : "remove bundle row"
+              }
               style={{
                 height: 28,
                 width: 28,
@@ -1428,35 +1654,21 @@ function BundleRow() {
                 fontWeight: 700,
               }}
               onClick={() => {
-                if (rows.length > 1) {
-                  handleRemoveRow(idx);
-                } else if (idx === rows.length - 1 && selectedModelsCount() < Object.keys(options).length) {
+                if (idx === rows.length - 1 && rows.length < totalVariantsCount()) {
                   handleAddRow();
+                } else if (rows.length > 1) {
+                  handleRemoveRow(idx);
                 }
               }}
             >
-              {rows.length > 1 ? "−" : idx === rows.length - 1 && selectedModelsCount() < Object.keys(options).length ? "+" : "+"}
+              {idx === rows.length - 1 && rows.length < totalVariantsCount()
+                ? "+"
+                : rows.length > 1
+                ? "−"
+                : ""}
             </button>
           </div>
-          {/* Row total pill */}
-          <div style={{ fontSize: 13, fontWeight: 400, color: "#888", marginLeft: 8, marginTop: 2 }}>
-            {row.model && row.variant && row.qty > 0 && (
-              <span style={{
-                ...pill,
-                background: "#f7f7f7",
-                color: "#6B6B6B",
-                fontSize: 13,
-                minWidth: 68,
-                padding: "7px 8px",
-                marginTop: 4,
-                marginLeft: 0,
-                marginBottom: 0,
-                fontWeight: 500,
-              }}>
-                ${(getPrice(row.model, row.variant) * row.qty).toFixed(2)}
-              </span>
-            )}
-          </div>
+          {/* Row total pill removed */}
         </div>
       ))}
     </div>

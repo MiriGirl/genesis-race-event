@@ -10,57 +10,76 @@ const supabase = createClient(
 export async function POST(req: Request) {
   try {
     const { fno, purchases } = await req.json();
+    console.log("Parsed request body:", { fno, purchases });
 
-    if (!fno || !purchases || purchases.length === 0) {
-      return NextResponse.json({ error: "Missing fno or purchases" }, { status: 400 });
+    if (!purchases || purchases.length === 0) {
+      return NextResponse.json({ error: "No purchases provided" }, { status: 400 });
     }
 
     // Insert each purchase
     for (const p of purchases) {
-      const { error } = await supabase.from("merch_purchases").insert({
-        fno,
-        item_type: p.item_type,
-        item_option: p.item_option,
+      // Map frontend fields to database fields
+      const mappedPurchase = {
+        fno: p.fno || null,
+        item_type: p.type,
+        item_option: p.item,
         qty: p.qty,
         price: p.price,
-      });
+      };
+      console.log("Mapped purchase to insert:", mappedPurchase);
+
+      const { error } = await supabase.from("merch_purchases").insert(mappedPurchase);
       if (error) {
         throw error;
       }
+      console.log("Successfully inserted purchase:", mappedPurchase);
+    }
+
+    const fnoToUse = purchases[0]?.fno || fno || null;
+
+    // If no fno, skip participant points update
+    if (!fnoToUse) {
+      return NextResponse.json({
+        success: true,
+        message: "Purchases inserted without participant update",
+      });
     }
 
     // Add +1 point for each unique item_type purchased
-    const uniqueTypes = new Set(purchases.map((p: any) => p.item_type));
+    const uniqueTypes = new Set(purchases.map((p: any) => p.type));
     const pointsToAdd = uniqueTypes.size;
+    console.log("Unique item types:", uniqueTypes, "Points to add:", pointsToAdd);
 
-    // Fetch current points
     const { data: participant, error: fetchError } = await supabase
       .from("participants")
       .select("points")
-      .eq("race_no", fno)
+      .eq("race_no", fnoToUse)
       .single();
 
     if (fetchError) {
       throw fetchError;
     }
+    console.log("Current participant points:", participant?.points);
 
     const currentPoints = participant?.points ?? 0;
     const newPoints = currentPoints + pointsToAdd;
+    console.log("New points to update:", newPoints);
 
     const { data: updated, error: updateError } = await supabase
       .from("participants")
       .update({ points: newPoints, merch_badge: true })
-      .eq("race_no", fno)
+      .eq("race_no", fnoToUse)
       .select()
       .single();
 
     if (updateError) {
       throw updateError;
     }
+    console.log("Updated participant data:", updated);
 
     return NextResponse.json({
       success: true,
-      fno,
+      fno: fnoToUse,
       points_added: pointsToAdd,
       updated,
     });
