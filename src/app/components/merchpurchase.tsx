@@ -292,7 +292,95 @@ export default function AdminApp({ isOpen, onClose }: AdminAppProps) {
             {/* --- T‑SHIRT SECTION (single row design) --- */}
             <TShirtRow />
 
-            {/* MerchPurchase moved above */}
+            {/* Divider line */}
+            <div style={{ borderTop: "4px solid #EEEEEE", width: "95%", margin: "16px 0" }} />
+
+            {/* CAP Section */}
+            <div style={{ width: "100%", marginTop: 8 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                <div style={{ paddingLeft: "8px", color: "#111", fontWeight: 800, fontSize: 18, letterSpacing: 0.2 }}>CAP</div>
+                <div style={{
+                  background: "#F4EDFF",
+                  color: "#6B6B6B",
+                  fontWeight: 600,
+                  borderRadius: 28,
+                  padding: "10px 8px",
+                  fontSize: 14,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  minWidth: 110
+                }}>
+                  $0.00
+                </div>
+              </div>
+              <input
+                type="number"
+                min={0}
+                placeholder="QTY"
+                style={{
+                  width: "90%",
+                  height: 50,
+                  borderRadius: 14,
+                  border: "1.5px solid #E6E6EA",
+                  padding: "0 18px",
+                  fontSize: 14,
+                  textAlign: "center",
+                  background: "#fff",
+                  boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
+                  fontWeight: 500,
+                  color: "#222"
+                }}
+              />
+            </div>
+
+            {/* Divider after CAP */}
+            <div style={{ borderTop: "4px solid #EEEEEE", width: "95%", margin: "16px 0" }} />
+
+            {/* TUMBLER Section */}
+            <div style={{ width: "100%", marginTop: 8 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                <div style={{ paddingLeft: "8px", color: "#111", fontWeight: 800, fontSize: 18, letterSpacing: 0.2 }}>TUMBLER</div>
+                <div style={{
+                  background: "#F4EDFF",
+                  color: "#6B6B6B",
+                  fontWeight: 600,
+                  borderRadius: 28,
+                  padding: "10px 8px",
+                  fontSize: 14,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  minWidth: 110
+                }}>
+                  $0.00
+                </div>
+              </div>
+              <input
+                type="number"
+                min={0}
+                placeholder="QTY"
+                style={{
+                  width: "90%",
+                  height: 50,
+                  borderRadius: 14,
+                  border: "1.5px solid #E6E6EA",
+                  padding: "0 18px",
+                  fontSize: 14,
+                  textAlign: "center",
+                  background: "#fff",
+                  boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
+                  fontWeight: 500,
+                  color: "#222"
+                }}
+              />
+            </div>
+
+            {/* Divider after TUMBLER */}
+            <div style={{ borderTop: "4px solid #EEEEEE", width: "95%", margin: "16px 0" }} />
+
+            {/* BUNDLES Section */}
+            <BundleRow />
           </motion.div>
         </motion.div>
       )}
@@ -688,75 +776,689 @@ function MerchPurchase() {
   );
 }
 
-/** CAP-style single row for T‑SHIRT: Title, full-width QTY input, pill total */
+/** Multi-row T‑SHIRT selection: model/variant/qty, plus/minus row controls */
 function TShirtRow() {
-  // Only one row, fixed model/variant for demo (could be props or state in real app)
-  // For CAP-style, let's assume a single row: "Grunge Tee | Acid"
-  const row = { model: "Grunge Tee", variant: "Acid" };
-  const price = 35;
-  const [qty, setQty] = React.useState(0);
+  // Options: object with model keys, each with array of variant objects
+  const options: Record<
+    string,
+    { label: string; price: number }[]
+  > = {
+    "Grunge Tee": [
+      { label: "Acid", price: 35 },
+      { label: "Cream", price: 35 },
+    ],
+    "Muscle Tee": [
+      { label: "Black", price: 30 },
+      { label: "White", price: 30 },
+    ],
+  };
+  // State: array of { model, variant, qty }
+  const [rows, setRows] = React.useState<{ model: string; variant: string; qty: number }[]>([
+    { model: "", variant: "", qty: 0 }
+  ]);
+
+  // Helper: get price for row
+  function getPrice(model: string, variant: string) {
+    if (model && variant) {
+      return options[model]?.find((v) => v.label === variant)?.price ?? 0;
+    }
+    return 0;
+  }
+  // Helper: check how many main models are used
+  function selectedModelsCount() {
+    // Only count non-empty model values, unique
+    return Array.from(new Set(rows.map(r => r.model).filter(Boolean))).length;
+  }
+
+  // Add a new row (if less than 2 main models used)
+  function handleAddRow() {
+    if (selectedModelsCount() < Object.keys(options).length) {
+      setRows((prev) => [...prev, { model: "", variant: "", qty: 0 }]);
+    }
+  }
+  // Remove a row
+  function handleRemoveRow(idx: number) {
+    setRows((prev) => prev.filter((_, i) => i !== idx));
+  }
+  // Update row field with auto-selection logic for single remaining variant/model
+  function updateRow(idx: number, field: "model" | "variant" | "qty", value: string | number) {
+    setRows((prev) => {
+      const arr = [...prev];
+      if (field === "model") {
+        const selectedModel = value as string;
+        // When setting model, clear variant
+        arr[idx] = { model: selectedModel, variant: "", qty: arr[idx].qty };
+        // If only one variant is available for this model, auto-select it
+        const variants = options[selectedModel] || [];
+        if (variants.length === 1) {
+          arr[idx].variant = variants[0].label;
+        }
+      } else if (field === "variant") {
+        arr[idx] = { ...arr[idx], variant: value as string };
+      } else if (field === "qty") {
+        arr[idx] = { ...arr[idx], qty: Math.max(0, Number(value)) };
+      }
+      return arr;
+    });
+  }
+
+  // Total for each row and overall
+  const lineTotals = rows.map(r => getPrice(r.model, r.variant) * r.qty);
+  const overallTotal = lineTotals.reduce((a, b) => a + b, 0);
+
   const pill = {
     background: "#F4EDFF",
     color: "#6B6B6B",
     fontWeight: 600,
     borderRadius: 28,
-    padding: "10px 18px",
-    fontSize: 16,
+    padding: "10px 8px",
+    fontSize: 14,
     display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",
-    minWidth: 90,
-    boxShadow: "0 1px 6px rgba(90,30,200,0.03)",
+    minWidth: 110,
   } as React.CSSProperties;
+
+  const cardShadow = "0 8px 24px rgba(0,0,0,0.08)";
+
   return (
-    <div style={{ width: "100%", marginTop: 18, marginBottom: 10 }}>
-      {/* Title row */}
-      <div style={{
-        fontWeight: 800,
-        fontSize: 17,
-        color: "#1A1A1A",
-        letterSpacing: 0.1,
-        marginBottom: 4,
-        paddingLeft: 2,
-      }}>
-        {row.model} &nbsp;|&nbsp; {row.variant}
+    <div style={{ width: "100%", marginTop: 8 }}>
+      {/* Header row */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+        <div style={{ paddingLeft: "8px", color: "#111", fontWeight: 800, fontSize: 18, letterSpacing: 0.2 }}>T-SHIRT</div>
+        <div style={pill}>${overallTotal.toFixed(2)}</div>
       </div>
-      {/* QTY input and pill total row */}
-      <div style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 12,
-        marginTop: 0,
-        marginBottom: 0,
-        width: "100%",
-      }}>
-        <input
-          type="number"
-          min={0}
-          value={qty}
-          onChange={e => setQty(Math.max(0, Number(e.target.value)))}
-          placeholder="QTY"
-          style={{
-            flexGrow: 1,
-            width: "100%",
-            borderRadius: 14,
-            border: "1.5px solid #E6E6EA",
-            padding: "15px 20px",
-            fontSize: 18,
-            fontWeight: 700,
-            color: "#222",
-            background: "#fff",
-            boxShadow: "0 2px 12px rgba(90,30,200,0.03)",
-            outline: "none",
-            marginRight: 0,
-            textAlign: "left",
-            letterSpacing: 0.2,
-          }}
-        />
-        <span style={pill}>
-          ${(price * qty).toFixed(2)}
-        </span>
+      {/* Each row */}
+      {rows.map((row, idx) => (
+        <div key={idx} style={{ marginBottom: idx < rows.length - 1 ? 10 : 0 }}>
+          {/* Selected label above dropdowns */}
+          {row.model && row.variant && (
+            <div
+              style={{
+                paddingLeft: "8px",
+                marginTop: idx === 0 ? "-18px" : "0px",
+                marginBottom: "8px",
+                fontSize: 13,
+                fontWeight: 400,
+                color: "#555",
+                letterSpacing: 0.01,
+              }}
+            >
+              {row.model} &nbsp;|&nbsp; {row.variant}
+            </div>
+          )}
+          {/* Controls row */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: row.model
+                ? "1.2fr 1.2fr 60px 38px"
+                : "2.4fr 60px 38px",
+              gap: 12,
+              alignItems: "center",
+            }}
+          >
+            {/* Model dropdown */}
+            <div style={{ position: "relative" }}>
+              <select
+                value={row.model}
+                onChange={(e) => updateRow(idx, "model", e.target.value)}
+                style={{
+                  width: "100%",
+                  minWidth: 120,
+                  height: 50,
+                  borderRadius: 14,
+                  border: "1.5px solid #E6E6EA",
+                  padding: "0 44px 0 18px",
+                  fontSize: 14,
+                  color: row.model ? "#222" : "#888",
+                  background: "#fff",
+                  boxShadow: cardShadow,
+                  appearance: "none",
+                  fontWeight: 500,
+                }}
+              >
+                <option value="" disabled hidden>
+                  Select Model
+                </option>
+                {Object.keys(options).map((m) => (
+                  <option
+                    key={m}
+                    value={m}
+                    disabled={
+                      // Disable if already selected in another row
+                      rows.some((r, i) => i !== idx && r.model === m)
+                    }
+                  >
+                    {m}
+                  </option>
+                ))}
+              </select>
+              {/* Chevron */}
+              <span
+                style={{
+                  position: "absolute",
+                  right: 10,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  width: 26,
+                  height: 26,
+                  borderRadius: "50%",
+                  background: "#EFEDFF",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  pointerEvents: "none",
+                }}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#555"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </span>
+            </div>
+            {/* Variant dropdown */}
+            {row.model && (
+              <div style={{ position: "relative" }}>
+                <select
+                  value={row.variant}
+                  onChange={(e) => updateRow(idx, "variant", e.target.value)}
+                  style={{
+                    width: "100%",
+                    minWidth: 100,
+                    height: 50,
+                    borderRadius: 14,
+                    border: "1.5px solid #E6E6EA",
+                    padding: "0 44px 0 18px",
+                    fontSize: 14,
+                    color: row.variant ? "#222" : "#888",
+                    background: "#fff",
+                    boxShadow: cardShadow,
+                    appearance: "none",
+                    fontWeight: 500,
+                  }}
+                  onBlur={() => {
+                    // Auto-select if only one option remains unselected
+                    // Only if not already selected
+                    if (!row.variant) {
+                      const allVariants = options[row.model];
+                      if (allVariants) {
+                        // Find variants not selected in other rows for this model
+                        const otherSelected = rows
+                          .filter((r, i) => i !== idx && r.model === row.model && r.variant)
+                          .map((r) => r.variant);
+                        const available = allVariants
+                          .map((v) => v.label)
+                          .filter((v) => !otherSelected.includes(v));
+                        if (available.length === 1) {
+                          // Auto-select the last remaining variant
+                          updateRow(idx, "variant", available[0]);
+                        }
+                      }
+                    }
+                  }}
+                >
+                  <option value="" disabled hidden>
+                    Select Variant
+                  </option>
+                  {options[row.model].map((v) => (
+                    <option key={v.label} value={v.label}>
+                      {v.label}
+                    </option>
+                  ))}
+                </select>
+                {/* Chevron */}
+                <span
+                  style={{
+                    position: "absolute",
+                    right: 10,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    width: 26,
+                    height: 26,
+                    borderRadius: "50%",
+                    background: "#EFEDFF",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    pointerEvents: "none",
+                  }}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#555"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </span>
+              </div>
+            )}
+            {/* QTY input */}
+            <input
+              type="number"
+              min={0}
+              value={row.qty}
+              onChange={(e) => updateRow(idx, "qty", e.target.value)}
+              placeholder="QTY"
+              style={{
+                height: 50,
+                width: 38,
+                borderRadius: 14,
+                border: "1.5px solid #E6E6EA",
+                padding: "0 8px",
+                fontSize: 14,
+                textAlign: "center",
+                background: "#fff",
+                boxShadow: cardShadow,
+                fontWeight: 600,
+                color: "#222",
+              }}
+            />
+            {/* Plus or minus button */}
+            <button
+              type="button"
+              aria-label={rows.length > 1 ? "remove tee row" : "add tee row"}
+              style={{
+                height: 28,
+                width: 28,
+                borderRadius: "50%",
+                background: "#000",
+                color: "#fff",
+                border: "none",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: "0 8px 24px rgba(0,0,0,0.22)",
+                fontSize: 18,
+                lineHeight: 1,
+                fontWeight: 700,
+              }}
+              onClick={() => {
+                if (rows.length > 1) {
+                  handleRemoveRow(idx);
+                } else if (idx === rows.length - 1 && selectedModelsCount() < Object.keys(options).length) {
+                  handleAddRow();
+                }
+              }}
+            >
+              {rows.length > 1 ? "−" : idx === rows.length - 1 && selectedModelsCount() < Object.keys(options).length ? "+" : "+"}
+            </button>
+          </div>
+          {/* Row total pill */}
+          <div style={{ fontSize: 13, fontWeight: 400, color: "#888", marginLeft: 8, marginTop: 2 }}>
+            {row.model && row.variant && row.qty > 0 && (
+              <span style={{
+                ...pill,
+                background: "#f7f7f7",
+                color: "#6B6B6B",
+                fontSize: 13,
+                minWidth: 68,
+                padding: "7px 8px",
+                marginTop: 4,
+                marginLeft: 0,
+                marginBottom: 0,
+                fontWeight: 500,
+              }}>
+                ${(getPrice(row.model, row.variant) * row.qty).toFixed(2)}
+              </span>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+// Multi-row BUNDLE selection: 4 bundle types, each with options inside
+function BundleRow() {
+  // Four bundle categories, each with variants and prices
+  const options: Record<
+    string,
+    { label: string; price: number }[]
+  > = {
+    "Bundle A": [
+      { label: "Starter", price: 55 },
+      { label: "Pro", price: 65 },
+    ],
+    "Bundle B": [
+      { label: "Basic", price: 60 },
+      { label: "Elite", price: 75 },
+    ],
+    "Bundle C": [
+      { label: "Family", price: 90 },
+      { label: "Friends", price: 95 },
+    ],
+    "Bundle D": [
+      { label: "Solo", price: 45 },
+      { label: "Duo", price: 80 },
+    ],
+  };
+  // State: array of { model, variant, qty }
+  const [rows, setRows] = React.useState<{ model: string; variant: string; qty: number }[]>([
+    { model: "", variant: "", qty: 0 }
+  ]);
+
+  function getPrice(model: string, variant: string) {
+    if (model && variant) {
+      return options[model]?.find((v) => v.label === variant)?.price ?? 0;
+    }
+    return 0;
+  }
+  function selectedModelsCount() {
+    return Array.from(new Set(rows.map(r => r.model).filter(Boolean))).length;
+  }
+  // Add a new row (if less than 4 main models used)
+  function handleAddRow() {
+    if (selectedModelsCount() < Object.keys(options).length) {
+      setRows((prev) => [...prev, { model: "", variant: "", qty: 0 }]);
+    }
+  }
+  function handleRemoveRow(idx: number) {
+    setRows((prev) => prev.filter((_, i) => i !== idx));
+  }
+  function updateRow(idx: number, field: "model" | "variant" | "qty", value: string | number) {
+    setRows((prev) => {
+      const arr = [...prev];
+      if (field === "model") {
+        const selectedModel = value as string;
+        arr[idx] = { model: selectedModel, variant: "", qty: arr[idx].qty };
+        const variants = options[selectedModel] || [];
+        if (variants.length === 1) {
+          arr[idx].variant = variants[0].label;
+        }
+      } else if (field === "variant") {
+        arr[idx] = { ...arr[idx], variant: value as string };
+      } else if (field === "qty") {
+        arr[idx] = { ...arr[idx], qty: Math.max(0, Number(value)) };
+      }
+      return arr;
+    });
+  }
+  const lineTotals = rows.map(r => getPrice(r.model, r.variant) * r.qty);
+  const overallTotal = lineTotals.reduce((a, b) => a + b, 0);
+  const pill = {
+    background: "#F4EDFF",
+    color: "#6B6B6B",
+    fontWeight: 600,
+    borderRadius: 28,
+    padding: "10px 8px",
+    fontSize: 14,
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    minWidth: 110,
+  } as React.CSSProperties;
+  const cardShadow = "0 8px 24px rgba(0,0,0,0.08)";
+  return (
+    <div style={{ width: "100%", marginTop: 8 }}>
+      {/* Header row */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+        <div style={{ paddingLeft: "8px", color: "#111", fontWeight: 800, fontSize: 18, letterSpacing: 0.2 }}>BUNDLES</div>
+        <div style={pill}>${overallTotal.toFixed(2)}</div>
       </div>
+      {/* Each row */}
+      {rows.map((row, idx) => (
+        <div key={idx} style={{ marginBottom: idx < rows.length - 1 ? 10 : 0 }}>
+          {/* Selected label above dropdowns */}
+          {row.model && row.variant && (
+            <div
+              style={{
+                paddingLeft: "8px",
+                marginTop: idx === 0 ? "-18px" : "0px",
+                marginBottom: "8px",
+                fontSize: 13,
+                fontWeight: 400,
+                color: "#555",
+                letterSpacing: 0.01,
+              }}
+            >
+              {row.model} &nbsp;|&nbsp; {row.variant}
+            </div>
+          )}
+          {/* Controls row */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: row.model
+                ? "1.2fr 1.2fr 60px 38px"
+                : "2.4fr 60px 38px",
+              gap: 12,
+              alignItems: "center",
+            }}
+          >
+            {/* Model dropdown */}
+            <div style={{ position: "relative" }}>
+              <select
+                value={row.model}
+                onChange={(e) => updateRow(idx, "model", e.target.value)}
+                style={{
+                  width: "100%",
+                  minWidth: 120,
+                  height: 50,
+                  borderRadius: 14,
+                  border: "1.5px solid #E6E6EA",
+                  padding: "0 44px 0 18px",
+                  fontSize: 14,
+                  color: row.model ? "#222" : "#888",
+                  background: "#fff",
+                  boxShadow: cardShadow,
+                  appearance: "none",
+                  fontWeight: 500,
+                }}
+              >
+                <option value="" disabled hidden>
+                  Select Bundle
+                </option>
+                {Object.keys(options).map((m) => (
+                  <option
+                    key={m}
+                    value={m}
+                    disabled={
+                      rows.some((r, i) => i !== idx && r.model === m)
+                    }
+                  >
+                    {m}
+                  </option>
+                ))}
+              </select>
+              {/* Chevron */}
+              <span
+                style={{
+                  position: "absolute",
+                  right: 10,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  width: 26,
+                  height: 26,
+                  borderRadius: "50%",
+                  background: "#EFEDFF",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  pointerEvents: "none",
+                }}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#555"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </span>
+            </div>
+            {/* Variant dropdown */}
+            {row.model && (
+              <div style={{ position: "relative" }}>
+                <select
+                  value={row.variant}
+                  onChange={(e) => updateRow(idx, "variant", e.target.value)}
+                  style={{
+                    width: "100%",
+                    minWidth: 100,
+                    height: 50,
+                    borderRadius: 14,
+                    border: "1.5px solid #E6E6EA",
+                    padding: "0 44px 0 18px",
+                    fontSize: 14,
+                    color: row.variant ? "#222" : "#888",
+                    background: "#fff",
+                    boxShadow: cardShadow,
+                    appearance: "none",
+                    fontWeight: 500,
+                  }}
+                  onBlur={() => {
+                    if (!row.variant) {
+                      const allVariants = options[row.model];
+                      if (allVariants) {
+                        const otherSelected = rows
+                          .filter((r, i) => i !== idx && r.model === row.model && r.variant)
+                          .map((r) => r.variant);
+                        const available = allVariants
+                          .map((v) => v.label)
+                          .filter((v) => !otherSelected.includes(v));
+                        if (available.length === 1) {
+                          updateRow(idx, "variant", available[0]);
+                        }
+                      }
+                    }
+                  }}
+                >
+                  <option value="" disabled hidden>
+                    Select Option
+                  </option>
+                  {options[row.model].map((v) => (
+                    <option key={v.label} value={v.label}>
+                      {v.label}
+                    </option>
+                  ))}
+                </select>
+                {/* Chevron */}
+                <span
+                  style={{
+                    position: "absolute",
+                    right: 10,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    width: 26,
+                    height: 26,
+                    borderRadius: "50%",
+                    background: "#EFEDFF",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    pointerEvents: "none",
+                  }}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#555"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </span>
+              </div>
+            )}
+            {/* QTY input */}
+            <input
+              type="number"
+              min={0}
+              value={row.qty}
+              onChange={(e) => updateRow(idx, "qty", e.target.value)}
+              placeholder="QTY"
+              style={{
+                height: 50,
+                width: 38,
+                borderRadius: 14,
+                border: "1.5px solid #E6E6EA",
+                padding: "0 8px",
+                fontSize: 14,
+                textAlign: "center",
+                background: "#fff",
+                boxShadow: cardShadow,
+                fontWeight: 600,
+                color: "#222",
+              }}
+            />
+            {/* Plus or minus button */}
+            <button
+              type="button"
+              aria-label={rows.length > 1 ? "remove bundle row" : "add bundle row"}
+              style={{
+                height: 28,
+                width: 28,
+                borderRadius: "50%",
+                background: "#000",
+                color: "#fff",
+                border: "none",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: "0 8px 24px rgba(0,0,0,0.22)",
+                fontSize: 18,
+                lineHeight: 1,
+                fontWeight: 700,
+              }}
+              onClick={() => {
+                if (rows.length > 1) {
+                  handleRemoveRow(idx);
+                } else if (idx === rows.length - 1 && selectedModelsCount() < Object.keys(options).length) {
+                  handleAddRow();
+                }
+              }}
+            >
+              {rows.length > 1 ? "−" : idx === rows.length - 1 && selectedModelsCount() < Object.keys(options).length ? "+" : "+"}
+            </button>
+          </div>
+          {/* Row total pill */}
+          <div style={{ fontSize: 13, fontWeight: 400, color: "#888", marginLeft: 8, marginTop: 2 }}>
+            {row.model && row.variant && row.qty > 0 && (
+              <span style={{
+                ...pill,
+                background: "#f7f7f7",
+                color: "#6B6B6B",
+                fontSize: 13,
+                minWidth: 68,
+                padding: "7px 8px",
+                marginTop: 4,
+                marginLeft: 0,
+                marginBottom: 0,
+                fontWeight: 500,
+              }}>
+                ${(getPrice(row.model, row.variant) * row.qty).toFixed(2)}
+              </span>
+            )}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

@@ -284,9 +284,11 @@ export default function FooterShell({ raceNo, bib }: { raceNo: string; bib: numb
     console.log("🎯 Rendering Stopwatch now with props:", footerStopwatchProps);
     console.log("Returning <FooterStopwatch /> component");
     return (
-      <FooterStopwatch
-        {...footerStopwatchProps}
-      />
+      <div >
+        <FooterStopwatch
+          {...footerStopwatchProps}
+        />
+      </div>
     );
   }
 

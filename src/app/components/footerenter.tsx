@@ -53,6 +53,7 @@ export default function FooterEnter({
   return (
     <>
       {/* Purple blur + text */}
+      
       <div
         style={{
           position: "relative",

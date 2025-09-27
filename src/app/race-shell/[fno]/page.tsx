@@ -75,44 +75,46 @@ function FooterShell({ raceNo, bib, status, setPageSyncing, onStatusUpdate, onFi
     );
   } else if (localStatus?.type === "stopwatch") {
     return (
-      <div
-        style={{
-          width: "100%",
-          background: "#111",
-          borderTop: "1px solid #333",
-          paddingTop: 15,
-          // flex: 1,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <FooterStopwatch
-          currentSector={localStatus.currentSector ?? 0}
-          raceNo={raceNo}
-          participantId={localStatus?.participantId ?? ""}
-          stationId={localStatus?.stationId ?? ""}
-          bib={bib.toString()}
-          accessCode={localStatus?.accessCode ?? ""}
-          startTime={localStatus?.startTime ?? ""}
-          onFinish={(splitMs) => {
-            console.log("Sector finished with split:", splitMs);
-            setPageSyncing(true);
-            setIsSyncing(true);
-            setTimeout(async () => {
-              const res = await fetch(`/api/race-status?raceNo=${raceNo}&bib=${bib}`);
-              if (res.ok) {
-                const data = await res.json();
-                setLocalStatus(data);
-                setRaceStatus(data);
-                onStatusUpdate(data);
-                await onFinishCallback();
-              }
-              setPageSyncing(false);
-              setIsSyncing(false);
-            }, 500);
+      <div style={{ marginTop: "-74px" }}>
+        <div
+          style={{
+            width: "100%",
+            background: "#111",
+            borderTop: "1px solid #333",
+            paddingTop: 15,
+            // flex: 1,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
           }}
-        />
+        >
+          <FooterStopwatch
+            currentSector={localStatus.currentSector ?? 0}
+            raceNo={raceNo}
+            participantId={localStatus?.participantId ?? ""}
+            stationId={localStatus?.stationId ?? ""}
+            bib={bib.toString()}
+            accessCode={localStatus?.accessCode ?? ""}
+            startTime={localStatus?.startTime ?? ""}
+            onFinish={(splitMs) => {
+              console.log("Sector finished with split:", splitMs);
+              setPageSyncing(true);
+              setIsSyncing(true);
+              setTimeout(async () => {
+                const res = await fetch(`/api/race-status?raceNo=${raceNo}&bib=${bib}`);
+                if (res.ok) {
+                  const data = await res.json();
+                  setLocalStatus(data);
+                  setRaceStatus(data);
+                  onStatusUpdate(data);
+                  await onFinishCallback();
+                }
+                setPageSyncing(false);
+                setIsSyncing(false);
+              }, 500);
+            }}
+          />
+        </div>
       </div>
     );
   } else {

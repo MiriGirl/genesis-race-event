@@ -90,6 +90,8 @@ export default function FooterStopwatch({ currentSector, onFinish, onStop, raceN
         color: "#fff",
         textAlign: "center",
         position: "relative",
+      
+      
       }}
     >
       {/* Sector Info */}
