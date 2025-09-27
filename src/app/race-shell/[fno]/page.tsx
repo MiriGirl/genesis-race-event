@@ -425,7 +425,7 @@ export default function RaceShell() {
                 transition: "all 0.3s ease",
               }}
             >
-              {activeTab === "map" && raceStatus?.type === "finished" ? "Lucky Draw" : "Race Map"}
+              {activeTab === "map" && raceStatus?.type === "finished" ? "Genesis 2025" : "Race Map"}
             </button>
             <button
               className="font-sans"
