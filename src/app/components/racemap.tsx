@@ -124,7 +124,7 @@ export default function RaceMap({ currentSector, sectors, statusType, onSectorCl
         ${
           currentSector && statusType === "stopwatch" && !raceNotStarted
             ? `
-          #track-${currentSector} {
+          [data-id="track-${currentSector}"] {
             stroke: #A349EF !important;
             stroke-width: 12;
             stroke-linecap: round;
@@ -165,7 +165,7 @@ export default function RaceMap({ currentSector, sectors, statusType, onSectorCl
             ? Array.from({ length: 6 - currentSector }, (_, i) => {
                 const sector = currentSector + i + 1;
                 return `
-                  #track-${sector} {
+                  [data-id="track-${sector}"] {
                     stroke: #dadada !important;
                     stroke-opacity: 0.15;
                     stroke-width: 12;
@@ -187,7 +187,7 @@ export default function RaceMap({ currentSector, sectors, statusType, onSectorCl
               .map(({ id, status }) => {
                 if (status === "completed") {
                   return `
-                    #track-${id} {
+                    [data-id="track-${id}"] {
                       stroke: #7000E0 !important;
                       stroke-width: 12;
                       stroke-linecap: round;
@@ -202,7 +202,7 @@ export default function RaceMap({ currentSector, sectors, statusType, onSectorCl
                   `;
                 } else if (status === "active") {
                   return `
-                    #track-${id} {
+                    [data-id="track-${id}"] {
                       stroke: #A349EF !important;
                       stroke-width: 12;
                       stroke-linecap: round;
@@ -228,7 +228,7 @@ export default function RaceMap({ currentSector, sectors, statusType, onSectorCl
                   `;
                 } else if (status === "idle") {
                   return `
-                    #track-${id} {
+                    [data-id="track-${id}"] {
                       stroke: #dadada !important;
                       stroke-opacity: 0.15;
                       stroke-width: 12;

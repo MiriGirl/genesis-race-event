@@ -14,5 +14,9 @@ module.exports = {
     },
   },
   plugins: [],
+  safelist: [
+      { pattern: /track-[1-6]/ },
+    { pattern: /\[data-id="track-\d+"\]/ },
+  ],
 };
 
