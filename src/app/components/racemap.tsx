@@ -33,6 +33,28 @@ export default function RaceMap({ currentSector, sectors, statusType, onSectorCl
     };
   }, [onSectorClick]);
 
+  useEffect(() => {
+    // reset all
+    document.querySelectorAll('[data-id^="track-"]').forEach(el => {
+      el.classList.remove("completed", "active");
+    });
+    document.querySelectorAll('[id^="sector-"]').forEach(el => {
+      el.classList.remove("completed", "active");
+    });
+
+    if (currentSector && currentSector > 1) {
+      for (let i = 1; i < currentSector; i++) {
+        document.querySelector(`[data-id="track-${i}"]`)?.classList.add("completed");
+        document.querySelector(`#sector-${i}`)?.classList.add("completed");
+      }
+    }
+
+    if (currentSector) {
+      document.querySelector(`[data-id="track-${currentSector}"]`)?.classList.add("active");
+      document.querySelector(`#sector-${currentSector}`)?.classList.add("active");
+    }
+  }, [currentSector, statusType]);
+
   return (
     <>
       <div style={{ display: "flex", justifyContent: "center" }}>
@@ -66,204 +88,6 @@ export default function RaceMap({ currentSector, sectors, statusType, onSectorCl
           </div>
         </div>
       )}
-      <style jsx global>{`
-        /* Make sector groups clickable if onSectorClick is provided */
-        ${onSectorClick
-          ? `
-          #sector-1, #sector-2, #sector-3, #sector-4, #sector-5, #sector-6 {
-            cursor: pointer;
-          }
-        `
-          : ""}
-        /* ✅ If no currentSector, everything stays idle */
-        ${allIdle
-          ? `
-          [data-id="track-1"], [data-id="track-2"], [data-id="track-3"], [data-id="track-4"], [data-id="track-5"], [data-id="track-"] {
-            stroke: rgba(218, 218, 218, 0.15) !important; /* #dadada at 15% */
-            stroke-width: 12;
-          }
-            
-
-          /* Sector circles & labels idle */
-      #number2, #number3, #number4, #number5, #number6 {
-            fill: #FFFFFF !important; /* white circles */
-          }
-          #number1 {
-            fill: #7000E0 !important;
-            animation: pulseGlow 2s infinite ease-in-out;
-            filter: drop-shadow(0 0 4px #A349EF);
-          }
-          #number-1 text, #number-2 text, #number-3 text, #number-4 text, #number-5 text, #number-6 text {
-            fill: #7000E0 !important; /* purple labels */
-          }
-        `
-          : ""}
-
-        /* ✅ Completed sectors (before currentSector) */
-        ${currentSector && currentSector > 1
-          ? Array.from({ length: currentSector - 1 }, (_, i) => {
-              const sector = i + 1;
-              return `
-                [data-id="track-${sector}"] {
-                  stroke: #7000E0 !important;
-                  stroke-width: 12;
-                  stroke-linecap: round;
-                  filter: drop-shadow(0px 0px 4px #7000E0);
-                }
-                #number${sector} {
-                  fill: #7000E0 !important;
-                }
-                #number-${sector} text {
-                  fill: #ffffff !important;
-                }
-              `;
-            }).join("\n")
-          : ""}
-
-        /* ✅ Active sector track highlight (only if statusType === "stopwatch" and !raceNotStarted) */
-        ${
-          currentSector && statusType === "stopwatch" && !raceNotStarted
-            ? `
-          [data-id="track-${currentSector}"] {
-            stroke: #A349EF !important;
-            stroke-width: 12;
-            stroke-linecap: round;
-            stroke-dasharray: 1200;
-            stroke-dashoffset: 1200;
-            animation: pulseGradientGlow 2s infinite ease-in-out, dashForward 12s linear infinite;
-            opacity: 1 !important;
-          }
-        `
-            : ""
-        }
-
-        /* ✅ Active sector circle styling (always if currentSector is set) */
-        ${
-          currentSector
-            ? `
-          #sector-${currentSector} {
-            animation: pulseGlow 1.4s infinite ease-in-out;
-            transform-box: fill-box;
-            -webkit-transform-box: fill-box; /* Safari/WebKit */
-            transform-origin: 50% 50%;
-            -webkit-transform-origin: 50% 50%;
-            will-change: transform, opacity, filter;
-          }
-          #sector-${currentSector} rect {
-            fill: #A349EF !important;
-          }
-          #sector-${currentSector} text {
-            fill: #ffffff !important;
-          }
-        `
-            : ""
-        }
-
-        /* ✅ Idle sectors (after currentSector or all if null) */
-        ${
-                    currentSector !== null && currentSector > 0
-            ? Array.from({ length: 6 - currentSector }, (_, i) => {
-                const sector = currentSector + i + 1;
-                return `
-                  [data-id="track-${sector}"] {
-                    stroke: #dadada !important;
-                    stroke-opacity: 0.15;
-                    stroke-width: 12;
-                  }
-                  #number${sector} {
-                   fill: #FFFFFF !important;
-                  }
-                  #number-${sector} text {
-                    fill: #7000E0 !important;
-                  }
-                `;
-              }).join("\n")
-            : ""
-        }
-
-        /* ✅ Sector states from sectors prop */
-        ${sectors && sectors.length > 0
-          ? sectors
-              .map(({ id, status }) => {
-                if (status === "completed") {
-                  return `
-                    [data-id="track-${id}"] {
-                      stroke: #7000E0 !important;
-                      stroke-width: 12;
-                      stroke-linecap: round;
-                      filter: drop-shadow(0px 0px 4px #7000E0);
-                    }
-                    #number${id} {
-                      fill: #7000E0 !important;
-                    }
-                    #number-${id} text {
-                      fill: #ffffff !important;
-                    }
-                  `;
-                } else if (status === "active") {
-                  return `
-                    [data-id="track-${id}"] {
-                      stroke: #A349EF !important;
-                      stroke-width: 12;
-                      stroke-linecap: round;
-                      stroke-dasharray: 1200;
-                      stroke-dashoffset: 1200;
-                      animation: pulseGradientGlow 2s infinite ease-in-out, dashForward 12s linear infinite;
-                      opacity: 1 !important;
-                    }
-                    #sector-${id} {
-                      animation: pulseGlow 1.4s infinite ease-in-out;
-                      transform-box: fill-box;
-                      -webkit-transform-box: fill-box;
-                      transform-origin: 50% 50%;
-                      -webkit-transform-origin: 50% 50%;
-                      will-change: transform, opacity, filter;
-                    }
-                    #sector-${id} rect {
-                      fill: #A349EF !important;
-                    }
-                    #sector-${id} text {
-                      fill: #ffffff !important;
-                    }
-                  `;
-                } else if (status === "idle") {
-                  return `
-                    [data-id="track-${id}"] {
-                      stroke: #dadada !important;
-                      stroke-opacity: 0.15;
-                      stroke-width: 12;
-                    }
-                    #number${id} {
-                      fill: #FFFFFF !important;
-                    }
-                    #number-${id} text {
-                      fill: #7000E0 !important;
-                    }
-                  `;
-                }
-                return "";
-              })
-              .join("\n")
-          : ""}
-
-        /* 🔮 Pulse glow for active circle */
-        @keyframes pulseGlow {
-          0%   { transform: scale(1);   opacity: 1;    filter: drop-shadow(0 0 3px #A349EF); }
-          50%  { transform: scale(1.5); opacity: 0.85; filter: drop-shadow(0 0 14px #A349EF); }
-          100% { transform: scale(1);   opacity: 1;    filter: drop-shadow(0 0 3px #A349EF); }
-        }
-
-        @keyframes dashForward {
-          from { stroke-dashoffset: 1200; }
-          to { stroke-dashoffset: 0; }
-        }
-
-        @keyframes pulseGradientGlow {
-          0%   { filter: drop-shadow(0 0 6px #420BD9); }
-          50%  { filter: drop-shadow(0 0 16px #D73AFF); }
-          100% { filter: drop-shadow(0 0 6px #420BD9); }
-        }
-      `}</style>
       
     </>
   );

@@ -139,3 +139,107 @@ body {
   50%  { background-position: 0    20px,10px 10px,20px 0   } 
   100% { background-position: 20px 20px,10px 10px,0    0   } 
 }
+
+/* ========================= */
+/* SECTOR TRACK STYLES       */
+/* ========================= */
+
+/* Idle state (default grey track) */
+[data-id^="track-"] {
+  stroke: rgba(218, 218, 218, 0.15) !important;
+  stroke-width: 12;
+}
+
+/* Completed sectors */
+[data-id^="track-"].completed {
+  stroke: #7000E0 !important;
+  stroke-width: 12;
+  stroke-linecap: round;
+  filter: drop-shadow(0px 0px 4px #7000E0);
+}
+
+/* Active sector */
+[data-id^="track-"].active {
+  stroke: #A349EF !important;
+  stroke-width: 12;
+  stroke-linecap: round;
+  stroke-dasharray: 1200;
+  stroke-dashoffset: 1200;
+  animation: pulseGradientGlow 2s infinite ease-in-out, dashForward 12s linear infinite;
+  opacity: 1 !important;
+}
+
+[data-id="track-1"] path {
+  fill: #6B00B6;   /* Purple background */
+  stroke: #6B00B6;
+}
+
+[data-id="track-1"] text {
+  fill: #ffffff;   /* White text */
+}
+/* ========================= */
+/* SECTOR NUMBER STYLES      */
+/* ========================= */
+
+/* Default (idle) */
+[id^="number"] {
+  fill: #ffffff !important;
+}
+
+[id^="number-"] text {
+  fill: #7000E0 !important;
+}
+
+/* Force Sector 1 number to always stay purple with white text */
+#number1 {
+  fill: #7000E0 !important; /* Purple circle */
+}
+#number1 + text,
+[id="1"] {
+  fill: #ffffff !important; /* White text */
+}
+
+/* Completed number */
+[id^="number"].completed {
+  fill: #7000E0 !important;
+}
+[id^="number-"].completed text {
+  fill: #ffffff !important;
+}
+
+/* Active number */
+[id^="sector"].active rect {
+  fill: #A349EF !important;
+}
+[id^="sector"].active text {
+  fill: #ffffff !important;
+}
+[id^="sector"].active {
+  animation: pulseGlow 1.4s infinite ease-in-out;
+  transform-box: fill-box;
+  -webkit-transform-box: fill-box; /* Safari */
+  transform-origin: 50% 50%;
+  -webkit-transform-origin: 50% 50%;
+  will-change: transform, opacity, filter;
+}
+
+/* ========================= */
+/* ANIMATIONS                */
+/* ========================= */
+
+@keyframes pulseGlow {
+  0%   { transform: scale(1);   opacity: 1;    filter: drop-shadow(0 0 3px #A349EF); }
+  50%  { transform: scale(1.2); opacity: 0.85; filter: drop-shadow(0 0 14px #A349EF); }
+  100% { transform: scale(1);   opacity: 1;    filter: drop-shadow(0 0 3px #A349EF); }
+}
+
+@keyframes dashForward {
+  from { stroke-dashoffset: 1200; }
+  to   { stroke-dashoffset: 0; }
+}
+
+@keyframes pulseGradientGlow {
+  0%   { filter: drop-shadow(0 0 6px #420BD9); }
+  50%  { filter: drop-shadow(0 0 16px #D73AFF); }
+  100% { filter: drop-shadow(0 0 6px #420BD9); }
+}
