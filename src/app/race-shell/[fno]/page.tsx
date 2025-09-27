@@ -408,7 +408,7 @@ export default function RaceShell() {
               border: "1px solid #fff",
               borderRadius: "50px",
               overflow: "hidden",
-              margin: "16px 16px 0 16px",
+              margin: "0px 16px 0 16px",
               background: "#000",
             }}
           >

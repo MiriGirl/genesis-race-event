@@ -38,32 +38,34 @@ export default function RaceMap({ currentSector, sectors, statusType, onSectorCl
       <div style={{ display: "flex", justifyContent: "center" }}>
         <MapSVG style={{ width: "100%", height: "auto" }} />
       </div>
-      <div style={{ textAlign: "center", marginTop: "12px", position: "relative" }}>
-        <div
-          style={{
-            height: "40px",
-            backgroundColor: "#A700D1",
-            opacity: 0.79,
-            filter: "blur(20px)",
-            zIndex: 0,
-          }}
-        />
-        <div
-          style={{
-            position: "relative",
-            zIndex: 2,
-            color: "#fff",
-            padding: "14px 0",
-            fontWeight: 600,
-            fontSize: "14px",
-            letterSpacing: "0.05em",
-            marginTop: "-50px",
-            marginBottom: 40, // keep text over blur
-          }}
-        >
-          SELECT A SECTOR TO LEARN MORE
+      {statusType !== "stopwatch" && (
+        <div style={{ textAlign: "center", marginTop: "12px", position: "relative" }}>
+          <div
+            style={{
+              height: "40px",
+              backgroundColor: "#A700D1",
+              opacity: 0.79,
+              filter: "blur(20px)",
+              zIndex: 0,
+            }}
+          />
+          <div
+            style={{
+              position: "relative",
+              zIndex: 2,
+              color: "#fff",
+              padding: "14px 0",
+              fontWeight: 600,
+              fontSize: "14px",
+              letterSpacing: "0.05em",
+              marginTop: "-50px",
+             
+            }}
+          >
+            SELECT A SECTOR TO LEARN MORE
+          </div>
         </div>
-      </div>
+      )}
       <style jsx global>{`
         /* Make sector groups clickable if onSectorClick is provided */
         ${onSectorClick
