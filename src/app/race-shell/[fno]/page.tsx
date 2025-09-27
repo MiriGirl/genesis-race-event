@@ -452,11 +452,11 @@ export default function RaceShell() {
           style={{
             flex: 1,
             background: "#000",
-            padding: "16px",
+           
             justifyContent: "center",
             alignItems: "center",
             flexDirection: "column",
-            overflowY: "auto",
+          
           }}
         >
           {/* Tab Content */}
@@ -472,9 +472,26 @@ export default function RaceShell() {
                 }}
               >
                 {raceStatus?.type === "finished" ? (
-                  <div style={{ color: "#fff", textAlign: "center" }}>
-                    <p>Lucky Draw</p>
-                  </div>
+                  <a
+                    href="https://meuraki.com/genesis2025"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      width: "100%",
+                      height: "calc(100vh - 180px)",
+                      minHeight: "300px",
+                      position: "relative",
+                      backgroundImage: 'url("/bg/genesis banner.webp")',
+                      backgroundSize: "cover",
+                      backgroundPosition: "center",
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "flex-end",
+                      textDecoration: "none",
+                    }}
+                  >
+                    {/* The whole banner is clickable, button removed */}
+                  </a>
                 ) : (
                   <div
                     style={{
@@ -485,9 +502,9 @@ export default function RaceShell() {
                   >
                     <RaceMap
                       key={`${fno}-${raceStatus?.type}-${displayedSector}`} // ✅ ensures animations restart on change
-  currentSector={displayedSector}
-  statusType={raceStatus?.type}
-  onSectorClick={(sectorId) => setSelectedSector(sectorId)}
+                      currentSector={displayedSector}
+                      statusType={raceStatus?.type}
+                      onSectorClick={(sectorId) => setSelectedSector(sectorId)}
                     />
                   </div>
                 )}

@@ -70,7 +70,7 @@ export default function FooterExit({ state, onAction }: FooterExitProps) {
           padding: "20px",
           position: "relative",
           zIndex: 1,
-          marginTop: "5%",
+              marginTop: -135,
           color: "black",
         }}
       >
