@@ -191,42 +191,42 @@ const MapSVG = (props: React.SVGProps<SVGSVGElement>) => (
         </g>
       </g>
       <path
-        id="track-1"
+        data-id="track-1"
         d="M278 307V97C278 69.3857 255.614 47 228 47L177.5 47"
         stroke="#DADADA"
        
         strokeWidth={12}
       />
       <path
-        id="track-2"
+        data-id="track-2"
         d="M174,47h-85c-26.5,0-48,21.5-48,48h0"
         stroke="#DADADA"
       
         strokeWidth={12}
       />
       <path
-        id="track-3"
+        data-id="track-3"
         d="M41 95L41 173"
         stroke="#DADADA"
        
         strokeWidth={12}
       />
        <path
-        id="track-4"
+        data-id="track-4"
         d="M43 173V247"
         stroke="#DADADA"
        
         strokeWidth={12}
       />
       <path
-        id="track-5"
+        data-id="track-5"
         d="M41 247.263C41 247.263 41 246.747 41 266.496C41 284.998 55.9985 300 74.5 300V300C93.0015 300 108 285.002 108 266.5V193V189.5C108 161.886 130.386 139.5 158 139.5H169"
         stroke="#DADADA"
         
         strokeWidth={12}
       />
       <path
-        id="track-6"
+        data-id="track-6"
         d="M165.5 139H178C205.614 139 228 161.379 228 188.993C228 214.126 228 244.212 228 268"
         stroke="#DADADA"
        

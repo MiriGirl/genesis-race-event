@@ -78,7 +78,7 @@ export default function RaceMap({ currentSector, sectors, statusType, onSectorCl
         /* ✅ If no currentSector, everything stays idle */
         ${allIdle
           ? `
-          #track-1, #track-2, #track-3, #track-4, #track-5, #track-6 {
+          [data-id="track-1"], [data-id="track-2"], [data-id="track-3"], [data-id="track-4"], [data-id="track-5"], [data-id="track-"] {
             stroke: rgba(218, 218, 218, 0.15) !important; /* #dadada at 15% */
             stroke-width: 12;
           }
@@ -104,7 +104,7 @@ export default function RaceMap({ currentSector, sectors, statusType, onSectorCl
           ? Array.from({ length: currentSector - 1 }, (_, i) => {
               const sector = i + 1;
               return `
-                #track-${sector} {
+                [data-id="track-${sector}"] {
                   stroke: #7000E0 !important;
                   stroke-width: 12;
                   stroke-linecap: round;
