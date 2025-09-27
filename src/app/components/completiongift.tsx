@@ -179,22 +179,24 @@ export default function GiftPopup({ isOpen, onClose, driverNo, raceType, style }
             </h3>
 
             {/* Download CTA */}
-            <button className="font-dragracing"
-              style={{
-                width: "100%",
-                background: "#000",
-                color: "#fff",
-                borderRadius: 24,
-                padding: "12px 16px",
-                fontSize: 22,
-                fontWeight: 600,
-                border: "none",
-                cursor: "pointer",
-                textTransform: "uppercase",
-              }}
-            >
-              Download the app
-            </button>
+            <a href="https://apps.apple.com/sg/app/meuraki-wellness/id6692630132" target="_blank" rel="noopener noreferrer">
+              <button className="font-dragracing"
+                style={{
+                  width: "100%",
+                  background: "#000",
+                  color: "#fff",
+                  borderRadius: 24,
+                  padding: "12px 16px",
+                  fontSize: 22,
+                  fontWeight: 600,
+                  border: "none",
+                  cursor: "pointer",
+                  textTransform: "uppercase",
+                }}
+              >
+                Download the app
+              </button>
+            </a>
           </motion.div>
         </motion.div>
       )}

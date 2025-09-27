@@ -191,7 +191,7 @@ export default function AdminApp({ isOpen, onClose }: AdminAppProps) {
               opacity: { duration: 0.2 },
             }}
             style={{
-              width: "100%",
+              width: "90%",
               maxWidth: "530px",
               margin: "0 auto",
               background: "#fafafa",
@@ -213,6 +213,7 @@ export default function AdminApp({ isOpen, onClose }: AdminAppProps) {
                 fontSize: "28px",
                 fontWeight: 700,
                 marginBottom: -10,
+                marginTop: -5,
                 color: "#000",
               }}
             >
@@ -286,7 +287,7 @@ export default function AdminApp({ isOpen, onClose }: AdminAppProps) {
             </div>
 
             {/* Horizontal divider line */}
-            <div style={{ borderTop: "4px solid #EEEEEE", margin: "20px 0", width: "100%" }} />
+            <div style={{ borderTop: "4px solid #EEEEEE", width: "95%" }} />
 
             {/* --- T‑SHIRT SECTION (single row design) --- */}
             <TShirtRow />
@@ -442,10 +443,10 @@ function MerchPurchase() {
   const totalToPay = tshirtTotal + capTotal + tumblerTotal + bundleTotal;
 
   return (
-    <div style={{ width: "100%", maxWidth: 460, display: "flex", flexDirection: "column", gap: 20 }}>
+    <div style={{ paddingLeft: 20, width: "100%", maxWidth: 460, display: "flex", flexDirection: "column", gap: 20 }}>
       {/* T-SHIRT row */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-        <label style={{ fontWeight: 600, fontSize: 16, minWidth: 80 }}>T-SHIRT</label>
+        <label style={{ color: "#000", fontWeight: 600, fontSize: 16, minWidth: 80 }}>T-SHIRT</label>
         <div style={{ flexGrow: 1 }}>
           {tshirtDropdowns.map((dropdown, idx) => (
             <div key={idx} style={{ display: "flex", alignItems: "center", marginBottom: idx < tshirtDropdowns.length - 1 ? 6 : 0 }}>
@@ -687,25 +688,83 @@ function MerchPurchase() {
   );
 }
 
-/** Single T‑SHIRT row matching design */
+/** Multi-row T‑SHIRT selection: model/variant/qty, plus/minus row controls */
 function TShirtRow() {
-  const options = [
-    { label: "Grunge Tee (Acid/Cream)", price: 35 },
-    { label: "Muscle Tee (Black/White)", price: 30 },
-  ];
-  const [sel, setSel] = React.useState<string>("");
-  const [qty, setQty] = React.useState<number>(0);
+  // Options: object with model keys, each with array of variant objects
+  const options: Record<
+    string,
+    { label: string; price: number }[]
+  > = {
+    "Grunge Tee": [
+      { label: "Acid", price: 35 },
+      { label: "Cream", price: 35 },
+    ],
+    "Muscle Tee": [
+      { label: "Black", price: 30 },
+      { label: "White", price: 30 },
+    ],
+  };
+  // State: array of { model, variant, qty }
+  const [rows, setRows] = React.useState<{ model: string; variant: string; qty: number }[]>([
+    { model: "", variant: "", qty: 0 }
+  ]);
 
-  const selectedPrice = options.find((o) => o.label === sel)?.price ?? 0;
-  const lineTotal = selectedPrice * qty;
+  // Helper: get price for row
+  function getPrice(model: string, variant: string) {
+    if (model && variant) {
+      return options[model]?.find((v) => v.label === variant)?.price ?? 0;
+    }
+    return 0;
+  }
+  // Helper: check how many main models are used
+  function selectedModelsCount() {
+    // Only count non-empty model values, unique
+    return Array.from(new Set(rows.map(r => r.model).filter(Boolean))).length;
+  }
+
+  // Add a new row (if less than 2 main models used)
+  function handleAddRow() {
+    if (selectedModelsCount() < Object.keys(options).length) {
+      setRows((prev) => [...prev, { model: "", variant: "", qty: 0 }]);
+    }
+  }
+  // Remove a row
+  function handleRemoveRow(idx: number) {
+    setRows((prev) => prev.filter((_, i) => i !== idx));
+  }
+  // Update row field with auto-selection logic for single remaining variant/model
+  function updateRow(idx: number, field: "model" | "variant" | "qty", value: string | number) {
+    setRows((prev) => {
+      const arr = [...prev];
+      if (field === "model") {
+        const selectedModel = value as string;
+        // When setting model, clear variant
+        arr[idx] = { model: selectedModel, variant: "", qty: arr[idx].qty };
+        // If only one variant is available for this model, auto-select it
+        const variants = options[selectedModel] || [];
+        if (variants.length === 1) {
+          arr[idx].variant = variants[0].label;
+        }
+      } else if (field === "variant") {
+        arr[idx] = { ...arr[idx], variant: value as string };
+      } else if (field === "qty") {
+        arr[idx] = { ...arr[idx], qty: Math.max(0, Number(value)) };
+      }
+      return arr;
+    });
+  }
+
+  // Total for each row and overall
+  const lineTotals = rows.map(r => getPrice(r.model, r.variant) * r.qty);
+  const overallTotal = lineTotals.reduce((a, b) => a + b, 0);
 
   const pill = {
     background: "#F4EDFF",
     color: "#6B6B6B",
-    fontWeight: 700,
+    fontWeight: 600,
     borderRadius: 28,
-    padding: "10px 18px",
-    fontSize: 18, // Shrink from 20px -> 18px
+    padding: "10px 8px",
+    fontSize: 14,
     display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",
@@ -717,127 +776,263 @@ function TShirtRow() {
   return (
     <div style={{ width: "100%", marginTop: 8 }}>
       {/* Header row */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-        <div style={{ fontWeight: 800, fontSize: 22, letterSpacing: 0.2 }}>T-SHIRT</div>
-        <div style={pill}>${lineTotal.toFixed(2)}</div>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+        <div style={{ paddingLeft: "8px", color: "#111", fontWeight: 800, fontSize: 18, letterSpacing: 0.2 }}>T-SHIRT</div>
+        <div style={pill}>${overallTotal.toFixed(2)}</div>
       </div>
-
-      {/* Controls row */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 100px 56px", // dropdown, qty, plus button
-          gap: 16,
-          alignItems: "center",
-        }}
-      >
-        {/* Dropdown */}
-        <div style={{ position: "relative" }}>
-          <select
-            value={sel}
-            onChange={(e) => setSel(e.target.value)}
-            style={{
-              width: "100%",
-              minWidth: 180,
-              height: 56,
-              borderRadius: 16,
-              border: "2px solid #E6E6EA",
-              padding: "0 64px 0 24px",
-              fontSize: 18,
-              color: sel ? "#222" : "#888",
-              background: "#fff",
-              boxShadow: cardShadow,
-              appearance: "none",
-            }}
-          >
-            <option value="" disabled hidden style={{ color: "#bbb", fontSize: 18 }}>
-              Select Type
-            </option>
-            {options.map((o) => (
-              <option key={o.label} value={o.label}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-          {/* Custom chevron circle */}
-          <span
-            style={{
-              position: "absolute",
-              right: 16,
-              top: "50%",
-              transform: "translateY(-50%)",
-              width: 30,
-              height: 30,
-              borderRadius: "50%",
-              background: "#EFEDFF",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              pointerEvents: "none",
-              boxShadow: "0 2px 6px rgba(0,0,0,0.04)",
-            }}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#555"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+      {/* Each row */}
+      {rows.map((row, idx) => (
+        <div key={idx} style={{ marginBottom: idx < rows.length - 1 ? 10 : 0 }}>
+          {/* Selected label above dropdowns */}
+          {row.model && row.variant && (
+            <div
+              style={{
+                paddingLeft: "8px",
+                marginTop: idx === 0 ? "-18px" : "0px",
+                marginBottom: "8px",
+                fontSize: 13,
+                fontWeight: 400,
+                color: "#555",
+                letterSpacing: 0.01,
+              }}
             >
-              <polyline points="6 9 12 15 18 9" />
-            </svg>
-          </span>
+              {row.model} &nbsp;|&nbsp; {row.variant}
+            </div>
+          )}
+          {/* Controls row */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: row.model
+                ? "1.2fr 1.2fr 60px 38px"
+                : "2.4fr 60px 38px",
+              gap: 12,
+              alignItems: "center",
+            }}
+          >
+            {/* Model dropdown */}
+            <div style={{ position: "relative" }}>
+              <select
+                value={row.model}
+                onChange={(e) => updateRow(idx, "model", e.target.value)}
+                style={{
+                  width: "100%",
+                  minWidth: 120,
+                  height: 50,
+                  borderRadius: 14,
+                  border: "1.5px solid #E6E6EA",
+                  padding: "0 44px 0 18px",
+                  fontSize: 14,
+                  color: row.model ? "#222" : "#888",
+                  background: "#fff",
+                  boxShadow: cardShadow,
+                  appearance: "none",
+                  fontWeight: 500,
+                }}
+              >
+                <option value="" disabled hidden>
+                  Select Model
+                </option>
+                {Object.keys(options).map((m) => (
+                  <option
+                    key={m}
+                    value={m}
+                    disabled={
+                      // Disable if already selected in another row
+                      rows.some((r, i) => i !== idx && r.model === m)
+                    }
+                  >
+                    {m}
+                  </option>
+                ))}
+              </select>
+              {/* Chevron */}
+              <span
+                style={{
+                  position: "absolute",
+                  right: 10,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  width: 26,
+                  height: 26,
+                  borderRadius: "50%",
+                  background: "#EFEDFF",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  pointerEvents: "none",
+                }}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#555"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </span>
+            </div>
+            {/* Variant dropdown */}
+            {row.model && (
+              <div style={{ position: "relative" }}>
+                <select
+                  value={row.variant}
+                  onChange={(e) => updateRow(idx, "variant", e.target.value)}
+                  style={{
+                    width: "100%",
+                    minWidth: 100,
+                    height: 50,
+                    borderRadius: 14,
+                    border: "1.5px solid #E6E6EA",
+                    padding: "0 44px 0 18px",
+                    fontSize: 14,
+                    color: row.variant ? "#222" : "#888",
+                    background: "#fff",
+                    boxShadow: cardShadow,
+                    appearance: "none",
+                    fontWeight: 500,
+                  }}
+                  onBlur={() => {
+                    // Auto-select if only one option remains unselected
+                    // Only if not already selected
+                    if (!row.variant) {
+                      const allVariants = options[row.model];
+                      if (allVariants) {
+                        // Find variants not selected in other rows for this model
+                        const otherSelected = rows
+                          .filter((r, i) => i !== idx && r.model === row.model && r.variant)
+                          .map((r) => r.variant);
+                        const available = allVariants
+                          .map((v) => v.label)
+                          .filter((v) => !otherSelected.includes(v));
+                        if (available.length === 1) {
+                          // Auto-select the last remaining variant
+                          updateRow(idx, "variant", available[0]);
+                        }
+                      }
+                    }
+                  }}
+                >
+                  <option value="" disabled hidden>
+                    Select Variant
+                  </option>
+                  {options[row.model].map((v) => (
+                    <option key={v.label} value={v.label}>
+                      {v.label}
+                    </option>
+                  ))}
+                </select>
+                {/* Chevron */}
+                <span
+                  style={{
+                    position: "absolute",
+                    right: 10,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    width: 26,
+                    height: 26,
+                    borderRadius: "50%",
+                    background: "#EFEDFF",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    pointerEvents: "none",
+                  }}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#555"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </span>
+              </div>
+            )}
+            {/* QTY input */}
+            <input
+              type="number"
+              min={0}
+              value={row.qty}
+              onChange={(e) => updateRow(idx, "qty", e.target.value)}
+              placeholder="QTY"
+              style={{
+                height: 50,
+                width: 38,
+                borderRadius: 14,
+                border: "1.5px solid #E6E6EA",
+                padding: "0 8px",
+                fontSize: 14,
+                textAlign: "center",
+                background: "#fff",
+                boxShadow: cardShadow,
+                fontWeight: 600,
+                color: "#222",
+              }}
+            />
+            {/* Plus or minus button */}
+            <button
+              type="button"
+              aria-label={rows.length > 1 ? "remove tee row" : "add tee row"}
+              style={{
+                height: 28,
+                width: 28,
+                borderRadius: "50%",
+                background: "#000",
+                color: "#fff",
+                border: "none",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: "0 8px 24px rgba(0,0,0,0.22)",
+                fontSize: 18,
+                lineHeight: 1,
+                fontWeight: 700,
+              }}
+              onClick={() => {
+                if (rows.length > 1) {
+                  handleRemoveRow(idx);
+                } else if (idx === rows.length - 1 && selectedModelsCount() < Object.keys(options).length) {
+                  handleAddRow();
+                }
+              }}
+            >
+              {rows.length > 1 ? "−" : idx === rows.length - 1 && selectedModelsCount() < Object.keys(options).length ? "+" : "+"}
+            </button>
+          </div>
+          {/* Row total pill */}
+          <div style={{ fontSize: 13, fontWeight: 400, color: "#888", marginLeft: 8, marginTop: 2 }}>
+            {row.model && row.variant && row.qty > 0 && (
+              <span style={{
+                ...pill,
+                background: "#f7f7f7",
+                color: "#6B6B6B",
+                fontSize: 13,
+                minWidth: 68,
+                padding: "7px 8px",
+                marginTop: 4,
+                marginLeft: 0,
+                marginBottom: 0,
+                fontWeight: 500,
+              }}>
+                ${(getPrice(row.model, row.variant) * row.qty).toFixed(2)}
+              </span>
+            )}
+          </div>
         </div>
-
-        {/* QTY */}
-        <input
-          type="number"
-          min={0}
-          value={qty}
-          onChange={(e) => setQty(Math.max(0, Number(e.target.value)))}
-          placeholder="QTY"
-          style={{
-            height: 56,
-            width: 80,
-            borderRadius: 16,
-            border: "2px solid #E6E6EA",
-            padding: "0 16px",
-            fontSize: 18,
-            textAlign: "center",
-            background: "#fff",
-            boxShadow: cardShadow,
-          }}
-        />
-
-        {/* Plus button */}
-        <button
-          type="button"
-          aria-label="add tee row"
-          style={{
-            height: 56,
-            width: 56,
-            borderRadius: "50%",
-            background: "#000",
-            color: "#fff",
-            border: "none",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            boxShadow: "0 8px 24px rgba(0,0,0,0.22)",
-            fontSize: 28,
-            lineHeight: 1,
-          }}
-          onClick={() => {
-            /* future: add another row */
-          }}
-        >
-          +
-        </button>
-      </div>
+      ))}
     </div>
   );
 }
