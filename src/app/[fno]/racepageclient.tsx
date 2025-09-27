@@ -22,6 +22,7 @@ export default function RacePageClient() {
   const [raceActive, setRaceActive] = useState(false);
   const [raceStatus, setRaceStatus] = useState<"not_started" | "in_progress" | "finished" | null>(null);
   const [showStartButton, setShowStartButton] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const FORCE_EVENT_MODE = false;
 
@@ -42,13 +43,19 @@ export default function RacePageClient() {
           } else if (data?.type === "finished" || data?.status === "finished") {
             // UI log for finished race holding state
             console.log("🏁 UI: Finished race (holding state)");
+            setShowStartButton(true);
           } else if (data?.status === "in_progress") {
-            // UI log for redirect
-            console.log("🚦 UI: Redirecting to race-shell");
-            router.replace(`/race-shell/${raceNo}`);
+            // UI log for in progress: show start button if raceActive, no redirect
+            if (raceActive) {
+              setShowStartButton(true);
+              console.log("🟢 UI: Showing START RACE button (race in progress, raceActive)");
+            } else {
+              setShowStartButton(false);
+            }
           } else {
             // UI log for fallback holding state
             console.log("ℹ️ UI: Holding state (no button/redirect)");
+            setShowStartButton(false);
           }
         } else {
           console.log("⏰ Outside event hours (before 10am or after 10pm SGT)");
@@ -63,14 +70,7 @@ export default function RacePageClient() {
           // Preferred if provided
           console.log("Race started?", data.status !== "not_started");
           setRaceStatus(data.status);
-          if (data.status === "in_progress") {
-            if (raceActive) {
-              console.log("Race in progress and raceActive is true → redirecting");
-              router.replace(`/race-shell/${raceNo}`);
-            } else {
-              console.log("Race in progress but raceActive is false → showing holding page");
-            }
-          }
+          // No redirect here; handled above by setting showStartButton
         } else if (data?.type) {
           // Fallback mapping if API only provides `type`
           const mapped =
@@ -81,10 +81,7 @@ export default function RacePageClient() {
               : data.type;
           console.log("Race started?", mapped !== "not_started");
           setRaceStatus(mapped as "not_started" | "in_progress" | "finished");
-          if (mapped === "in_progress" && raceActive) {
-            console.log("Race in progress (from type) and raceActive is true → redirecting");
-            router.replace(`/race-shell/${raceNo}`);
-          }
+          // If mapped is in_progress and raceActive, showStartButton is set above
         } else {
           setRaceStatus(null);
         }
@@ -385,29 +382,46 @@ export default function RacePageClient() {
           {/* START RACE button only shown when showStartButton is true */}
           {showStartButton ? (
             <div className="mt-4">
-              <button
-                onClick={() => router.push(`/race-shell/${raceNo}`)}
-                className="font-dragracing"
-                style={{
-                  background: "rgba(128,0,255,0.4)",
-                  color: "#FFFFFF",
-                  fontSize: "32px",
-                  fontWeight: 400,
-                  letterSpacing: "0.02em",
-                  padding: "20px 40px",
-                  borderRadius: "20px",
-                  border: "none",
-                  cursor: "pointer",
-                  width: "100%",
-                  maxWidth: "336px",
-                  height: "87px",
-                 
-                }}
-              >
-                START RACE
-              </button>
+              {loading ? (
+                <div className="flex justify-center items-center h-[87px]">
+                  <div className="loader"></div>
+                </div>
+              ) : (
+                <button
+                  onClick={() => {
+                    setLoading(true);
+                    setTimeout(() => {
+                      router.push(`/race-shell/${raceNo}`);
+                    }, 1000);
+                  }}
+                  className="font-dragracing"
+                  style={{
+                    background: "rgba(128,0,255,0.4)",
+                    color: "#FFFFFF",
+                    fontSize: "32px",
+                    fontWeight: 400,
+                    letterSpacing: "0.02em",
+                    padding: "20px 40px",
+                    borderRadius: "20px",
+                    border: "none",
+                    cursor: "pointer",
+                    width: "100%",
+                    maxWidth: "336px",
+                    height: "87px",
+                  }}
+                >
+                  START RACE
+                </button>
+              )}
             </div>
-          ) : raceActive ? null : null}
+          ) : raceActive && !showStartButton ? (
+            // Show loader when raceActive is true and showStartButton not yet resolved
+            <div className="mt-4">
+              <div className="flex justify-center items-center h-[87px]">
+                <div className="loader"></div>
+              </div>
+            </div>
+          ) : null}
 
           {raceStatus === "finished" ? (
             // Placeholder for finished race state
