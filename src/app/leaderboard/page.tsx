@@ -25,6 +25,7 @@ type LeaderboardEntry = {
   last_sector?: number;
   race_time?: number;
   line_type?: string;
+  pos?: number; // Position from backend API
 };
 
 type SectorEntry = {
@@ -55,6 +56,7 @@ export default function Leaderboard({
   lineType,
 }: LeaderboardProps) {
   const [data, setData] = useState<LeaderboardEntry[]>([]);
+  const [latestData, setLatestData] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [sectors, setSectors] = useState<SectorEntry[]>([]);
 
@@ -89,9 +91,17 @@ export default function Leaderboard({
   useEffect(() => {
     async function fetchLeaderboard() {
       try {
-        const res = await fetch(`/api/leaderboard?raceNo=${currentRaceNo}`);
+        // Fetch main leaderboard (event leaderboard)
+        const res = await fetch(`/api/leaderboard`);
         const lb = await res.json();
-        const normalized = Array.isArray(lb) ? lb : lb?.data ?? [];
+        const normalized = (Array.isArray(lb) ? lb : lb?.data ?? []).map((entry: any) => ({
+          participant_id: entry.participant_id,
+          race_no: entry.race_no,
+          name: entry.name,
+          nationality: entry.nationality,
+          total_seconds: entry.total_seconds,
+          pos: entry.pos,
+        }));
         // Determine updated row
         if (data.length > 0 && normalized.length > 0) {
           for (let i = 0; i < normalized.length; i++) {
@@ -114,12 +124,32 @@ export default function Leaderboard({
         setLoading(false);
       }
     }
+    async function fetchLatestFinishers() {
+      try {
+        // Fetch latest finishers for left-hand leaderboard
+        const res = await fetch(`/api/latest-finishers`);
+        const lb = await res.json();
+        const normalized = (Array.isArray(lb) ? lb : lb?.data ?? []).map((entry: any) => ({
+          participant_id: entry.participant_id,
+          race_no: entry.race_no,
+          name: entry.name,
+          nationality: entry.nationality,
+          total_seconds: entry.total_seconds,
+          pos: entry.pos,
+        }));
+        setLatestData(normalized);
+      } catch (err) {
+        console.error("Error fetching latest finishers", err);
+      }
+    }
     fetchLeaderboard();
+    fetchLatestFinishers();
 
     const channel = supabase
       .channel("leaderboard-updates")
       .on("postgres_changes", { event: "*", schema: "public", table: "checkpoints" }, () => {
         fetchLeaderboard();
+        fetchLatestFinishers();
       })
       .subscribe();
 
@@ -226,7 +256,7 @@ export default function Leaderboard({
                   boxShadow: "0 0 18px rgba(255,255,255,0.3)",
                 }}
               >
-                <h1 style={{ margin: 0, fontSize: "20px", fontWeight: "bold" }}>EVENT LEADERBOARD</h1>
+                <h1 style={{ margin: 0, fontSize: "20px", fontWeight: "bold" }}>LATEST RACE RESULTS</h1>
               </div>
             </div>
 
@@ -256,7 +286,7 @@ export default function Leaderboard({
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                 <AnimatePresence>
-                  {data.slice(0, 15).map((entry, idx) => {
+                  {latestData.slice(0, 15).map((entry, idx) => {
                     const isUpdated = entry.participant_id === updatedRow;
                     // Animation logic: row 0 always purple, updated row flashes purple then fades to black, others black
                     let initial = { opacity: 0, y: -30, backgroundColor: "rgba(168,85,247,0.8)" };
@@ -293,7 +323,9 @@ export default function Leaderboard({
                           boxShadow: idx < 3 ? "0 0 15px 5px rgba(168,85,247,1)" : "none"
                         }}
                       >
-                        <span className="font-dragracing" style={{ fontSize: 20, fontWeight: "bold" }}>{idx + 1}</span>
+                        <span className="font-dragracing" style={{ fontSize: 20, fontWeight: "bold" }}>
+                          {entry.pos ?? idx + 1}
+                        </span>
                         <span style={{ fontSize: 28, fontWeight: "500" }}>{flagFor(entry.nationality)}</span>
                         <span className="font-dragracing" style={{ fontSize: 20, fontWeight: "400" }}>{entry.race_no}</span>
                         <span style={{ overflow: "hidden", textOverflow: "ellipsis", textTransform: "uppercase", whiteSpace: "nowrap", fontSize: 16, fontWeight: "500" }}>
@@ -308,10 +340,24 @@ export default function Leaderboard({
             )}
           </div>
           <div style={{ flex: 1 }}>
-            {/* Right Panel: Best Sector Times */}
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", height: "100vh", boxSizing: "border-box" }}>
-              {/* Logo above Best Sector Times table */}
-              <div style={{ marginBottom: "20px", marginTop: -40, width: "100%", display: "flex", justifyContent: "center" }}>
+            {/* Right Panel: Event Leaderboard duplicate */}
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "stretch",
+                boxSizing: "border-box",
+                padding: "0",
+              }}
+            >
+              {/* Logo above leaderboard table */}
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  marginBottom: "12px",
+                }}
+              >
                 <Image
                   src="/bg/innerdrive-crest.png"
                   alt="Innerdrive Crest"
@@ -327,13 +373,13 @@ export default function Leaderboard({
                   className="font-dragracing"
                   style={{
                     background: "#ffffff",
-                    padding: "6px 40px",
+                    padding: "6px 50px",
                     color: "black",
                     clipPath: "polygon(5% 0, 100% 0, 95% 100%, 0% 100%)",
                     boxShadow: "0 0 18px rgba(255,255,255,0.3)",
                   }}
                 >
-                  <h1 style={{ margin: 0, fontSize: "20px", fontWeight: "bold" }}>BEST SECTOR TIMES</h1>
+                  <h1 style={{ margin: 0, fontSize: "20px", fontWeight: "bold" }}>EVENT LEADERBOARD</h1>
                 </div>
               </div>
 
@@ -341,36 +387,32 @@ export default function Leaderboard({
               <div
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "68px 130px 40px 180px 60px 0fr 100px 50px",
+                  gridTemplateColumns: "60px 40px 120px 0fr 300px",
                   alignItems: "center",
-                  padding: "10px 40px",
+                  padding: "5px 66px",
                   marginBottom: "10px",
                   fontWeight: 400,
                   fontSize: "16px",
                   textTransform: "uppercase",
                   color: "#ffffffff",
-                  width: "84%",
+                  width: "100%",
                 }}
               >
                 <span>Pos</span>
-                
-                <span>FNO</span>
                 <span> </span>
+                <span>Driver No</span>
                 <span>Name</span>
-                   <span> </span>
-                   <span>Sector</span>
-               
-                <span style={{ textAlign: "right" }}>Time</span>
-                <span> </span>
+                <span style={{ textAlign: "right" }}>HH:MM:SS</span>
               </div>
 
-              <div style={{ display: "flex", flexDirection: "column", gap: "10px", overflowY: "inherit", width: "85%" }}>
-                {loading ? (
-                  <p style={{ textAlign: "center", padding: "40px 0" }}>Loading...</p>
-                ) : (
+              {loading ? (
+                <p style={{ textAlign: "center", padding: "40px 0" }}>Loading...</p>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px", width: "100%" }}>
                   <AnimatePresence>
-                    {sectors.map((entry, idx) => {
-                      const isUpdated = entry.participant_id === updatedSectorRow;
+                    {data.slice(0, 15).map((entry, idx) => {
+                      const isUpdated = entry.participant_id === updatedRow;
+                      // Animation logic: row 0 always purple, updated row flashes purple then fades to black, others black
                       let initial = { opacity: 0, y: -30, backgroundColor: "rgba(168,85,247,0.8)" };
                       let animate, transition, onAnimationComplete;
                       if (idx === 0) {
@@ -388,50 +430,36 @@ export default function Leaderboard({
                         onAnimationComplete = undefined;
                       }
                       return (
-                        <div key={"sector-" + entry.participant_id} style={{ position: "relative" }}>
-                          <motion.div
-                            layout
-                            initial={initial}
-                            animate={animate}
-                            exit={{ opacity: 0, y: 30 }}
-                            transition={transition}
-                            onAnimationComplete={onAnimationComplete}
-                            style={{
-                              display: "grid",
-                              gridTemplateColumns: "40px 24px 20px 100px 280px 0fr 100px 60px",
-                              alignItems: "center",
-                              padding: "2px 40px",
-                              clipPath: "polygon(5% 0, 100% 0, 95% 100%, 0% 100%)",
-                              boxShadow: idx < 3 ? "0 0 15px 5px rgba(168,85,247,1)" : "none"
-                            }}
-                          >
-                            <span className="font-dragracing" style={{ fontSize: 20, fontWeight: "bold" }}>{entry.pos}</span>
-                          
-                            <span style={{ fontSize: 24, fontWeight: "500" }}>{flagFor(entry.nationality)}</span>
-                            <span />
-                            <span className="font-dragracing" style={{ fontSize: 20, fontWeight: "400" }}>{entry.race_no}</span>
-                            <span style={{ overflow: "hidden", textOverflow: "ellipsis", textTransform: "uppercase", whiteSpace: "nowrap", fontSize: 16, fontWeight: "500" }}>
-                              {entry.name}
-                            </span>
-                             <span className="font-dragracing" style={{ fontSize: 20, fontWeight: "bold" }}>{entry.sector}</span>
-                            <span style={{ textAlign: "right", fontSize: 16, fontWeight: "400" }}>{formatTime(entry.best_time_seconds)}</span>
-                            <span />
-                          </motion.div>
-                          {idx < 6 && (
-                            <Image
-                              src={`/bg/mvp-${idx + 1}.webp`}
-                              alt="badge"
-                              width={40}
-                              height={40}
-                              style={{ position: "absolute", right: -50, top: "50%", transform: "translateY(-50%)" }}
-                            />
-                          )}
-                        </div>
+                        <motion.div
+                          key={entry.participant_id + "-right"}
+                          layout
+                          initial={initial}
+                          animate={animate}
+                          exit={{ opacity: 0, y: 30 }}
+                          transition={transition}
+                          onAnimationComplete={onAnimationComplete}
+                          style={{
+                            display: "grid",
+                            gridTemplateColumns: "60px 40px 120px 1fr 120px",
+                            alignItems: "center",
+                            padding: "2px 66px",
+                            clipPath: "polygon(5% 0, 100% 0, 95% 100%, 0% 100%)",
+                            boxShadow: idx < 3 ? "0 0 15px 5px rgba(168,85,247,1)" : "none"
+                          }}
+                        >
+                          <span className="font-dragracing" style={{ fontSize: 20, fontWeight: "bold" }}>{idx + 1}</span>
+                          <span style={{ fontSize: 28, fontWeight: "500" }}>{flagFor(entry.nationality)}</span>
+                          <span className="font-dragracing" style={{ fontSize: 20, fontWeight: "400" }}>{entry.race_no}</span>
+                          <span style={{ overflow: "hidden", textOverflow: "ellipsis", textTransform: "uppercase", whiteSpace: "nowrap", fontSize: 16, fontWeight: "500" }}>
+                            {entry.name}
+                          </span>
+                          <span style={{ textAlign: "right", fontSize: 16, fontWeight: "400" }}>{formatTime(entry.total_seconds)}</span>
+                        </motion.div>
                       );
                     })}
                   </AnimatePresence>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

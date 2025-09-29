@@ -24,6 +24,8 @@ type LeaderboardEntry = {
   last_sector?: number;
   race_time?: number;
   line_type?: string;
+  merch_badge?: boolean;
+  app_badge?: boolean;
 };
 
 type LeaderboardProps = {
@@ -477,6 +479,46 @@ export default function Leaderboard({
                   key="quest"
                   src={questImg}
                   alt="Quest Completion Badge"
+                  width={70}
+                  height={70}
+                  style={{
+                    opacity: 1,
+                    filter: "none",
+                    transition: "opacity 0.3s, filter 0.3s",
+                    boxShadow: "0 0 15px 5px rgba(168,85,247,0.8)",
+                    borderRadius: "50%",
+                    animation: "pulseGlow 2s infinite",
+                  }}
+                />
+              );
+            }
+            // --- Merch and App Installed badge logic ---
+            // Only check for these if current is defined
+            if (current?.merch_badge) {
+              renderedBadges.push(
+                <Image
+                  key="merch"
+                  src="/bg/merch.png"
+                  alt="Merch Badge"
+                  width={70}
+                  height={70}
+                  style={{
+                    opacity: 1,
+                    filter: "none",
+                    transition: "opacity 0.3s, filter 0.3s",
+                    boxShadow: "0 0 15px 5px rgba(168,85,247,0.8)",
+                    borderRadius: "50%",
+                    animation: "pulseGlow 2s infinite",
+                  }}
+                />
+              );
+            }
+            if (current?.app_badge) {
+              renderedBadges.push(
+                <Image
+                  key="appinstalled"
+                  src="/bg/appinstalled.png"
+                  alt="App Installed Badge"
                   width={70}
                   height={70}
                   style={{
