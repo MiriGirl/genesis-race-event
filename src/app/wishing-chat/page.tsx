@@ -4,6 +4,20 @@ import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import RegisterForm from "../components/registerform";
 
+import { createClient } from "@supabase/supabase-js";
+
+type Wish = {
+  id: string;
+  name: string;
+  message: string;
+  created_at: string;
+};
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+
 export default function WishingWall() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showWishSheet, setShowWishSheet] = useState(false);
@@ -11,7 +25,8 @@ export default function WishingWall() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   // Wishes state, initially empty
-  const [wishes, setWishes] = useState<any[]>([]);
+  const [wishes, setWishes] = useState<Wish[]>([]);
+  const [recentWishId, setRecentWishId] = useState<string | null>(null);
 
 
   // Fetch live wishes from API
@@ -22,35 +37,83 @@ export default function WishingWall() {
         if (!res.ok) throw new Error("Failed to fetch wishes");
         const data = await res.json();
         const wishesArray = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [];
-        setWishes([...wishesArray].reverse());
+        // Sort oldest to newest
+        wishesArray.sort((a: Wish, b: Wish) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+        setWishes(wishesArray);
       } catch (err) {
         console.error("❌ Error fetching wishes:", err);
       }
     }
 
-    fetchWishes();
-    const interval = setInterval(fetchWishes, 8000);
-    return () => clearInterval(interval);
+    fetchWishes(); // initial load only
   }, []);
 
-  // Auto-scroll to bottom as new wishes appear
+  // Supabase realtime integration for wishes
+  useEffect(() => {
+    const channel = supabase
+      .channel("realtime:wishes")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "wishes" },
+        (payload: any) => {
+          console.log("📡 Realtime update:", payload);
+
+          setWishes((prev: Wish[]) => {
+            // Prevent duplicate insertions from replayed realtime events
+            if (payload.eventType === "INSERT" && payload.new) {
+              const exists = prev.some((w) => w.id === payload.new.id);
+              if (exists) return prev; // skip if already in list
+              return [...prev, payload.new];
+            }
+
+            // Handle deletes
+            if (payload.eventType === "DELETE" && payload.old) {
+              return prev.filter((w) => w.id !== payload.old.id);
+            }
+
+            // Handle updates
+            if (payload.eventType === "UPDATE" && payload.new) {
+              return prev.map((w) => (w.id === payload.new.id ? payload.new : w));
+            }
+
+            return prev;
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      console.log("🧹 Cleaning up realtime listener");
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  // Auto-scroll to bottom as new wishes appear with smooth behavior
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      scrollRef.current.scrollTo({
+        top: scrollRef.current.scrollHeight,
+        behavior: "smooth",
+      });
     }
   }, [wishes]);
 
   function timeAgo(dateString: string) {
     const now = new Date();
     const then = new Date(dateString);
+
+    // Compare both in UTC to avoid timezone drift
     const diff = Math.floor((now.getTime() - then.getTime()) / 1000); // seconds
+
     if (diff < 60) return "just now";
     const mins = Math.floor(diff / 60);
     if (mins < 60) return `${mins} min${mins > 1 ? "s" : ""} ago`;
     const hours = Math.floor(mins / 60);
     if (hours < 24) return `${hours} hour${hours > 1 ? "s" : ""} ago`;
     const days = Math.floor(hours / 24);
-    return `${days} day${days > 1 ? "s" : ""} ago`;
+    if (days < 7) return `${days} day${days > 1 ? "s" : ""} ago`;
+    const weeks = Math.floor(days / 7);
+    return `${weeks} week${weeks > 1 ? "s" : ""} ago`;
   }
 
   return (
@@ -88,7 +151,7 @@ export default function WishingWall() {
             transform: "translateX(-50%)",
             background: "black",
             color: "white",
-            padding: "15px 47px",
+            padding: "15px 20px",
             borderRadius: "25px",
             fontSize: "clamp(12px, 1.2vw, 16px)",
             fontWeight: 600,
@@ -151,56 +214,72 @@ export default function WishingWall() {
             }}
             ref={scrollRef}
           >
-            {wishes.map((wish) => (
-              <div
-                key={wish.id}
-                style={{
-                  background: "#ffffff",
-                  borderRadius: "12px",
-                  padding: "10px",
-                  fontFamily: "'Poppins', sans-serif",
-                  display: "flex",
-                  alignItems: "flex-start",
-                  gap: "10px",
-                }}
-              >
-                <img src="/bg/purple-heart.png" alt="heart" width={22} height={22} />
-                <div>
-                  <p
-                    style={{
-                      fontWeight: 700,
-                      margin: 0,
-                      fontSize: "clamp(12px, 1.2vw, 16px)",
-                      color: "#000000",
-                      lineHeight: 1.1,
-                    }}
-                  >
-                    {wish.name}
-                  </p>
-                  <p
-                    style={{
-                      margin: 0,
-                      fontSize: "clamp(12px, 1vw, 14px)",
-                      fontWeight: 500,
-                      color: "#696969",
-                    }}
-                  >
-                    {timeAgo(wish.created_at)}
-                  </p>
-                  <p
-                    style={{
-                      marginTop: "5px",
-                      fontSize: "clamp(12px, 1vw, 14px)",
-                      lineHeight: "1.3em",
-                      fontWeight: 400,
-                      color: "#696969",
-                    }}
-                  >
-                    {wish.message}
-                  </p>
-                </div>
-              </div>
-            ))}
+            <AnimatePresence initial={false}>
+              {wishes.map((wish) => (
+                <motion.div
+                  key={wish.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{
+                    opacity: 1,
+                    y: 0,
+                    scale: recentWishId === wish.id ? [1, 1.05, 1] : 1,
+                    boxShadow:
+                      recentWishId === wish.id
+                        ? "0 0 25px rgba(255,105,180,0.8)"
+                        : "0 0 0 rgba(0,0,0,0)",
+                  }}
+                  transition={{ duration: 0.8 }}
+                  onAnimationComplete={() => {
+                    if (recentWishId === wish.id) setRecentWishId(null);
+                  }}
+                  style={{
+                    background: "#ffffff",
+                    borderRadius: "12px",
+                    padding: "10px",
+                    fontFamily: "'Poppins', sans-serif",
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: "10px",
+                  }}
+                >
+                  <img src="/bg/purple-heart.png" alt="heart" width={22} height={22} />
+                  <div>
+                    <p
+                      style={{
+                        fontWeight: 700,
+                        margin: 0,
+                        fontSize: "clamp(12px, 1.2vw, 16px)",
+                        color: "#000000",
+                        lineHeight: 1.1,
+                      }}
+                    >
+                      {wish.name}
+                    </p>
+                    <p
+                      style={{
+                        margin: 0,
+                        fontSize: "clamp(12px, 1vw, 14px)",
+                        fontWeight: 500,
+                        color: "#696969",
+                      }}
+                    >
+                      {timeAgo(wish.created_at)}
+                    </p>
+                    <p
+                      style={{
+                        marginTop: "5px",
+                        fontSize: "clamp(12px, 1vw, 14px)",
+                        lineHeight: "1.3em",
+                        fontWeight: 400,
+                        color: "#696969",
+                      }}
+                    >
+                      {wish.message}
+                    </p>
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
           </div>
           {/* Add wish bar wrapper */}
           <div style={{ position: "relative", width: "100%", display: "flex", justifyContent: "center" }}>
@@ -293,7 +372,10 @@ export default function WishingWall() {
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <RegisterForm onClose={() => setShowWishSheet(false)} />
+            <RegisterForm
+              onClose={() => setShowWishSheet(false)}
+              onWishSubmitted={(newWishId: string) => setRecentWishId(newWishId)}
+            />
           </div>
         </div>
       )}
@@ -307,6 +389,7 @@ export default function WishingWall() {
         .live-feed {
           grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
           gap: 1vw;
+          scroll-behavior: smooth;
         }
         @media (min-width: 768px) {
           .live-feed {

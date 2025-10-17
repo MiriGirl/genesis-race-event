@@ -4,6 +4,13 @@ import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import RegisterForm from "../components/registerform";
 
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+
 export default function WishingWall() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showWishSheet, setShowWishSheet] = useState(false);
@@ -16,22 +23,52 @@ export default function WishingWall() {
 
   // Fetch live wishes from API
   useEffect(() => {
-    async function fetchWishes() {
-      try {
-        const res = await fetch("/api/wishing-well", { cache: "no-store" });
-        if (!res.ok) throw new Error("Failed to fetch wishes");
-        const data = await res.json();
-        const wishesArray = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [];
-        setWishes([...wishesArray].reverse());
-      } catch (err) {
-        console.error("❌ Error fetching wishes:", err);
-      }
+  async function fetchWishes() {
+    try {
+      const res = await fetch("/api/wishing-well", { cache: "no-store" });
+      if (!res.ok) throw new Error("Failed to fetch wishes");
+      const data = await res.json();
+      const wishesArray = Array.isArray(data?.data)
+        ? data.data
+        : Array.isArray(data)
+        ? data
+        : [];
+      setWishes([...wishesArray].reverse());
+    } catch (err) {
+      console.error("❌ Error fetching wishes:", err);
     }
+  }
 
-    fetchWishes();
-    const interval = setInterval(fetchWishes, 8000);
-    return () => clearInterval(interval);
-  }, []);
+  // Initial fetch
+  fetchWishes();
+
+  // Supabase realtime listener
+  const channel = supabase
+    .channel("realtime:wishes")
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "wishes" },
+      (payload) => {
+        console.log("📡 Realtime update:", payload);
+        if (payload.eventType === "INSERT" && payload.new) {
+          setWishes((prev) => [payload.new, ...prev]);
+        } else if (payload.eventType === "DELETE" && payload.old) {
+          setWishes((prev) => prev.filter((w) => w.id !== payload.old.id));
+        } else if (payload.eventType === "UPDATE" && payload.new) {
+          setWishes((prev) =>
+            prev.map((w) => (w.id === payload.new.id ? payload.new : w))
+          );
+        }
+      }
+    )
+    .subscribe();
+
+  // Cleanup
+  return () => {
+    console.log("🧹 Cleaning up realtime listener");
+    supabase.removeChannel(channel);
+  };
+}, []);
 
   // Auto-scroll to bottom as new wishes appear
   useEffect(() => {

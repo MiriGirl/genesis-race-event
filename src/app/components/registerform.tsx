@@ -16,6 +16,8 @@ const WELLNESS_NAMES = [
 
 type WishFormProps = {
   onClose?: () => void;
+   initialLineType?: string; // 👈 add this line
+     onWishSubmitted?: (newWishId: string) => void; // ✅ add this line
 };
 
 export default function RegisterForm({ onClose }: WishFormProps) {
@@ -125,33 +127,31 @@ export default function RegisterForm({ onClose }: WishFormProps) {
         zIndex: 99,
         display: "flex",
         justifyContent: "center",
-        alignItems: "flex-end",
+        alignItems: "center",
       }}
       onClick={onClose}
     >
       <motion.div
         key="bottomSheet"
-        initial={{ y: 80, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        exit={{ y: 80, opacity: 0 }}
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
         transition={{
-          duration: 0.4,
+          duration: 0.3,
           ease: "easeOut",
         }}
         onClick={(e) => e.stopPropagation()}
         style={{
           position: "relative",
-          bottom: 0,
           width: "100%",
           maxWidth: "550px",
           background: "#fff",
-          borderTopLeftRadius: "54px",
-          borderTopRightRadius: "54px",
-          boxShadow: "0 -10px 30px rgba(0,0,0,0.25)",
-          padding: "24px 16px 16px 16px",
+          borderRadius: "30px",
+          boxShadow: "0 8px 25px rgba(0,0,0,0.3)",
+          padding: "40px 28px 28px 28px",
           fontFamily: "'Poppins', sans-serif",
           color: "#000",
-          transformOrigin: "bottom center",
+          transformOrigin: "center center",
           willChange: "transform, opacity",
         }}
       >
@@ -176,17 +176,17 @@ export default function RegisterForm({ onClose }: WishFormProps) {
             fontSize: "28px",
             fontWeight: 700,
             textAlign: "center",
-            marginBottom: "10px",
+            marginBottom: "0px",
           }}
         >
-          Submit a Wish
+           <img src="/bg/purple-heart.png" alt="heart" width={50} height={50} /><br></br> Write Your Wish
         </h2>
         <p
           style={{
             fontSize: "15px",
             color: "#8f8f8fff",
             textAlign: "center",
-            marginBottom: "18px",
+            marginBottom: "40px",
           }}
         >
           Share your wish, intention, or blessing.
@@ -198,7 +198,7 @@ export default function RegisterForm({ onClose }: WishFormProps) {
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
           {/* Name */}
           <div>
-            <label style={{ fontSize: "14px", fontWeight: 600, fontFamily,}}>Your Name</label>
+            <label style={{ fontSize: "14px", fontWeight: 600, fontFamily, }}>Your Name (Optional)</label>
             <input
               type="text"
               name="name"
@@ -219,6 +219,7 @@ export default function RegisterForm({ onClose }: WishFormProps) {
                 fontFamily,
                 opacity: anonymous ? 0.7 : 1,
                 transition: "opacity 0.2s",
+           
               }}
               required={!anonymous}
               autoComplete="off"
@@ -240,7 +241,7 @@ export default function RegisterForm({ onClose }: WishFormProps) {
                 marginRight: "2px",
               }}
             />
-            Post as anonymous (generate wellness name)
+            Post as anonymous 
           </label>
 
           {/* Wish Textarea */}
@@ -295,7 +296,7 @@ export default function RegisterForm({ onClose }: WishFormProps) {
               opacity: submitting ? 0.7 : 1,
             }}
           >
-            ❤️ Submit Wish
+            Post Wish
           </button>
         </form>
         {/* Success animated heart overlay */}
