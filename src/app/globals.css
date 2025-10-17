@@ -243,3 +243,11 @@ body {
   50%  { filter: drop-shadow(0 0 16px #D73AFF); }
   100% { filter: drop-shadow(0 0 6px #420BD9); }
 }
+
+@font-face {
+  font-family: "Meriah";
+  src: url("/fonts/Meriah.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}

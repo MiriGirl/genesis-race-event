@@ -39,7 +39,7 @@ export async function GET() {
 
     if (error) throw error;
 
-    return NextResponse.json({ success: true, wishes: data });
+    return NextResponse.json(data);
   } catch (err: any) {
     console.error("GET Error:", err);
     return NextResponse.json(

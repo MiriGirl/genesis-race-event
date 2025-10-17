@@ -10,6 +10,7 @@ module.exports = {
       fontFamily: {
         sans: ["var(--font-poppins)", "sans-serif"], // Poppins from next/font
         dragracing: ["DragRacing", "sans-serif"],   // Local font
+        meriah: ["Meriah", "sans-serif"],  
       },
     },
   },
