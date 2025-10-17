@@ -116,19 +116,23 @@ export default function WishingWall() {
     return `${weeks} week${weeks > 1 ? "s" : ""} ago`;
   }
 
+  useEffect(() => {
+    document.documentElement.style.background = "transparent";
+    document.body.style.background = "transparent";
+  }, []);
   return (
     <div
       style={{
         width: "100%",
         maxWidth: "900px",
-        margin: "0 auto",
-        minHeight: "100%",
+        minHeight: "70%",
         background: "transparent",
+        margin: "0",
+        padding: "0",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        padding: "40px 20px",
         boxSizing: "border-box",
       }}
     >
@@ -170,12 +174,12 @@ export default function WishingWall() {
             width: "100%",
             maxWidth: "800px",
             margin: "0 auto",
-            background: "rgba(255,255,255,0.45)",
+            background: "transparent",
             borderRadius: "20px",
             paddingTop: "40px",
             padding: "20px",
             paddingBottom: "60px",
-            boxShadow: "0 8px 32px rgba(0, 0, 0, 0.25)",
+            // boxShadow: "0 8px 32px rgba(0, 0, 0, 0.25)", // Removed box shadow per instructions
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
@@ -380,11 +384,21 @@ export default function WishingWall() {
         </div>
       )}
       <style jsx>{`
+        :global(html),
+        :global(body) {
+          background: transparent !important;
+          background-color: transparent !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          overflow: hidden !important;
+        }
         html, body {
           overflow: hidden;
-          margin: 0;
-          padding: 0;
-          background: transparent;
+          margin: 0 !important;
+          padding: 0 !important;
+          background-color: transparent !important;
+          color: inherit !important;
+          box-sizing: border-box;
         }
         .live-feed {
           grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
