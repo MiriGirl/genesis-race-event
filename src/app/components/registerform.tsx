@@ -121,13 +121,15 @@ export default function RegisterForm({ onClose }: WishFormProps) {
         top: 0,
         left: 0,
         width: "100vw",
-        height: "100vh",
+        height: "70vh",
         background: "rgba(0,0,0,0.35)",
         backdropFilter: "blur(3px)",
         zIndex: 99,
         display: "flex",
         justifyContent: "center",
-        alignItems: "center",
+        alignItems: "flex-start",
+        paddingTop: "30px",
+        overflowY: "auto",
       }}
       onClick={onClose}
     >
@@ -144,11 +146,11 @@ export default function RegisterForm({ onClose }: WishFormProps) {
         style={{
           position: "relative",
           width: "100%",
-          maxWidth: "550px",
+          maxWidth: "420px",
           background: "#fff",
-          borderRadius: "30px",
-          boxShadow: "0 8px 25px rgba(0,0,0,0.3)",
-          padding: "40px 28px 28px 28px",
+          borderRadius: "22px",
+          boxShadow: "0 6px 18px rgba(0,0,0,0.25)",
+          padding: "24px 18px 18px 18px",
           fontFamily: "'Poppins', sans-serif",
           color: "#000",
           transformOrigin: "center center",
@@ -159,11 +161,11 @@ export default function RegisterForm({ onClose }: WishFormProps) {
           onClick={onClose}
           style={{
             position: "absolute",
-            right: "20px",
-            top: "18px",
+            right: "18px",
+            top: "14px",
             background: "transparent",
             border: "none",
-            fontSize: "22px",
+            fontSize: "20px",
             color: "#000",
             cursor: "pointer",
           }}
@@ -176,17 +178,18 @@ export default function RegisterForm({ onClose }: WishFormProps) {
             fontSize: "28px",
             fontWeight: 700,
             textAlign: "center",
-            marginBottom: "0px",
+            marginBottom: "4px",
+            marginTop: "0px",
           }}
         >
-           <img src="/bg/purple-heart.png" alt="heart" width={50} height={50} /><br></br> Write Your Wish
+           <img src="/bg/purple-heart.png" alt="heart" width={44} height={44} /><br></br> Write Your Wish
         </h2>
         <p
           style={{
-            fontSize: "15px",
+            fontSize: "14px",
             color: "#8f8f8fff",
             textAlign: "center",
-            marginBottom: "40px",
+            marginBottom: "16px",
           }}
         >
           Share your wish, intention, or blessing.
@@ -196,57 +199,91 @@ export default function RegisterForm({ onClose }: WishFormProps) {
 
         {/* Keep the existing form JSX unchanged below this point */}
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
-          {/* Name */}
-          <div>
-            <label style={{ fontSize: "14px", fontWeight: 600, fontFamily, }}>Your Name (Optional)</label>
-            <input
-              type="text"
-              name="name"
-              placeholder="Enter your name"
-              value={name}
-              onChange={e => setName(e.target.value)}
-              disabled={anonymous}
+          {/* Name and Anonymous Checkbox Row */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "14px",
+              marginBottom: "4px",
+            }}
+          >
+            {/* Name Input */}
+            <div style={{ width: "50%" }}>
+              <label style={{ fontSize: "13px", fontWeight: 600, fontFamily, marginBottom: "2px" }}>Your Name (Optional)</label>
+              <input
+                type="text"
+                name="name"
+                placeholder="Enter your name"
+                value={name}
+                onChange={e => setName(e.target.value)}
+                disabled={anonymous}
+                style={{
+                  width: "100%",
+                  height: "42px",
+                  background: "#EFEDFF",
+                  borderRadius: "12px",
+                  padding: "0 22px",
+                  fontSize: "15px",
+                  color: "#777",
+                  border: errors.name ? "2px solid #7559FF" : "0px solid #ccc",
+                  boxSizing: "border-box",
+                  fontFamily,
+                  opacity: anonymous ? 0.7 : 1,
+                  transition: "opacity 0.2s",
+                  marginTop: "4px",
+                }}
+                required={!anonymous}
+                autoComplete="off"
+              />
+              {errors.name && <p style={{ color: "#7559FF", fontSize: "12px", marginTop: 4 }}>{errors.name}</p>}
+            </div>
+            {/* Anonymous Checkbox - pill style */}
+            <label
               style={{
-                width: "100%",
-                height: "50px",
-                background: "#EFEDFF",
-                borderRadius: "12px",
-                padding: "0 22px",
-                fontSize: "15px",
-                color: "#777",
-                border: errors.name ? "2px solid #7559FF" : "0px solid #ccc",
-                boxSizing: "border-box",
-                fontFamily,
-                opacity: anonymous ? 0.7 : 1,
-                transition: "opacity 0.2s",
-           
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                background: "#f7f7f7",
+                borderRadius: "999px",
+                padding: "4px 12px",
+                height: "42px",
+                cursor: "pointer",
+                userSelect: "none",
+                marginTop: "14px", // visually aligns with name label
               }}
-              required={!anonymous}
-              autoComplete="off"
-            />
-            {errors.name && <p style={{ color: "#7559FF", fontSize: "12px", marginTop: 4 }}>{errors.name}</p>}
+            >
+              <input
+                type="checkbox"
+                checked={anonymous}
+                onChange={handleAnonymousChange}
+                style={{
+                  width: "16px",
+                  height: "16px",
+                  border: "1px solid #979797",
+                  accentColor: "#7559FF",
+                  marginRight: "2px",
+                  flexShrink: 0,
+                }}
+              />
+              <span
+                style={{
+                  fontSize: "13px",
+                  color: "#333",
+                  fontWeight: 500,
+                  fontFamily,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Post as anonymous
+              </span>
+            </label>
           </div>
-
-          {/* Anonymous Checkbox - when ticked, posts anonymously with a random wellness name */}
-          <label style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13px", fontFamily, userSelect: "none" }}>
-            <input
-              type="checkbox"
-              checked={anonymous}
-              onChange={handleAnonymousChange}
-              style={{
-                width: "18px",
-                height: "18px",
-                border: "1px solid #979797",
-                accentColor: "#7559FF",
-                marginRight: "2px",
-              }}
-            />
-            Post as anonymous 
-          </label>
 
           {/* Wish Textarea */}
           <div>
-            <label style={{ fontSize: "14px", fontWeight: 500, fontFamily }}>Your Wish</label>
+            <label style={{ fontSize: "13px", fontWeight: 500, fontFamily, marginBottom: "2px" }}>Your Wish</label>
             <textarea
               name="wish"
               placeholder="May everyone be happy and peaceful..."
@@ -254,7 +291,7 @@ export default function RegisterForm({ onClose }: WishFormProps) {
               onChange={e => setWish(e.target.value)}
               style={{
                 width: "100%",
-                minHeight: "90px",
+                minHeight: "70px",
                 maxHeight: "180px",
                 background: "#EFEDFF",
                 borderRadius: "12px",
@@ -265,7 +302,7 @@ export default function RegisterForm({ onClose }: WishFormProps) {
                 boxSizing: "border-box",
                 resize: "none",
                 fontFamily,
-                marginTop: "2px",
+                marginTop: "4px",
               }}
               required
               maxLength={500}
@@ -291,7 +328,7 @@ export default function RegisterForm({ onClose }: WishFormProps) {
               textTransform: "none",
               cursor: submitting ? "not-allowed" : "pointer",
               boxShadow: "0 4px 16px #EFEDFF77",
-              marginTop: "6px",
+              marginTop: "4px",
               transition: "opacity 0.2s",
               opacity: submitting ? 0.7 : 1,
             }}
