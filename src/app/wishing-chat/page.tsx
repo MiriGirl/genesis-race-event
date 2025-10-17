@@ -27,11 +27,13 @@ export default function WishingWall() {
   // Wishes state, initially empty
   const [wishes, setWishes] = useState<Wish[]>([]);
   const [recentWishId, setRecentWishId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
 
   // Fetch live wishes from API
   useEffect(() => {
     async function fetchWishes() {
+      setLoading(true);
       try {
         const res = await fetch("/api/wishing-well", { cache: "no-store" });
         if (!res.ok) throw new Error("Failed to fetch wishes");
@@ -40,8 +42,11 @@ export default function WishingWall() {
         // Sort oldest to newest
         wishesArray.sort((a: Wish, b: Wish) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
         setWishes(wishesArray);
+        setLoading(false);
       } catch (err) {
         console.error("❌ Error fetching wishes:", err);
+      } finally {
+        setLoading(false);
       }
     }
 
@@ -120,6 +125,37 @@ export default function WishingWall() {
     document.documentElement.style.background = "transparent";
     document.body.style.background = "transparent";
   }, []);
+
+  if (loading) {
+    return (
+      <div style={{
+        width: "100%",
+        height: "100vh",
+        background: "transparent",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center"
+      }}>
+        <img
+          src="/bg/purple-heart.png"
+          alt="Loading..."
+          style={{
+            width: "80px",
+            height: "80px",
+            animation: "pulseHeart 1.2s ease-in-out infinite",
+          }}
+        />
+        <style jsx>{`
+          @keyframes pulseHeart {
+            0% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.25); opacity: 1; }
+            100% { transform: scale(1); opacity: 0.8; }
+          }
+        `}</style>
+      </div>
+    );
+  }
+
   return (
     <div
       style={{
